@@ -80,5 +80,6 @@ Point web browser to the ```nestgraph``` directory on your webserver!  Admire pr
 * Heating on/off trendline lazily mapped on to the temperature graph
 * Assumes you want temperatures displayed in Fahrenheit
 * Doesn't automatically redraw when you resize the browser window
+* Labels (current/target/heating) don't follow the trend lines when you pan/zoom
 * Need to figure out what's actually wrong with the authentication caching in ```nest-api``` instead of just purging its files in ```/tmp```
 
