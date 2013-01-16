@@ -14,6 +14,9 @@ I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Docu
 * Stores selected data in local MySQL database
 * Generates a nice visualization of actual temp vs. set point
 * Lower mini-chart is interactive pan-and-zoom of the upper chart
+* Hover over the gray circles to get the exact timestamp and temperature
+
+[![nestgraph screenshot](https://github.com/chriseng/nestgraph/raw/master/nestgraph-screenshot.png)]
 
 ## Dependencies
 
