@@ -7,7 +7,7 @@ define('DEFAULT_HRS', 72);
 
 $hrs = DEFAULT_HRS; 
 if ($_GET["hrs"]) {
-  $hrs = $_GET["hrs"];
+  $hrs = intval($_GET["hrs"]);
 }
 
 try {
