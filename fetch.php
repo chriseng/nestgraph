@@ -7,12 +7,13 @@ define('DEFAULT_HRS', 72);
 
 $hrs = DEFAULT_HRS; 
 if ($_GET["hrs"]) {
-  $hrs = intval($_GET["hrs"]);
+  $hrs = $_GET["hrs"];
 }
 
 try {
   $db = new DB($config);
-  if ($stmt = $db->res->prepare("SELECT * from data where timestamp>=DATE_SUB(NOW(), INTERVAL " . $hrs . " HOUR) order by timestamp")) {
+  if ($stmt = $db->res->prepare("SELECT * from data where timestamp>=DATE_SUB(NOW(), INTERVAL ? HOUR) order by timestamp")) {
+    $stmt->bind_param("i", $hrs);
     $stmt->execute();
     $stmt->bind_result($timestamp, $heating, $target, $current, $humidity, $updated);
     header("Content-type: text/tab-separated-values");
