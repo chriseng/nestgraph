@@ -22,9 +22,10 @@ I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Docu
 
 ## Getting Started
 
-Clone this repo.
+Clone this repo into your web root.
 
 ```bash
+cd [your-web-root]
 git clone https://github.com/chriseng/nestgraph.git
 ```
 
