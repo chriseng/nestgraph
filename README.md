@@ -6,7 +6,7 @@ Create pretty charts of your Nest thermostat data.
 
 The point of this project was to see how well the Nest algorithms work. In particuar, the Nest claims to minimize overshoot, which is a common problem with cast-iron radiators. It also claims to know when to start heating in order to hit your target temperature exactly at the time you scheduled it.  
 
-I also wanted an excuse to play with the D3 (Data-Driven Documents) library a little.
+I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Documents) library a little.
 
 ## Features
 
@@ -65,9 +65,9 @@ mysql -u root < dbsetup
 Create a cron job to poll the website periodically and update the local database. The thermostat does not phone home on a fixed schedule, but typically it updates in 5 to 30 minute intervals. The script will only insert into the database if there is new data available. Obviously, update the path to ```insert.php``` if it's not in ```/var/www/html/nestgraph```.
 
 ```bash
-*/5 * * * *     /bin/rm -f /tmp/nest_php_* ; /usr/bin/php /var/www/html/nest/insert.php > /dev/null
+*/5 * * * *     /bin/rm -f /tmp/nest_php_* ; /usr/bin/php /var/www/html/nestgraph/insert.php > /dev/null
 ```
-(FYI, we remove the files in /tmp because it seems the ```nest-api``` library attempts to cache authentication info too aggressively, and after a few days it ends up trying to connect to an AWS server that no longer exists.)
+(FYI, the reason we remove the files in ```/tmp``` is because it seems the nest-api library attempts to cache authentication info too aggressively, and after a few days it ends up trying to connect to an AWS server that no longer exists.)
 
 Point web browser to the ```nestgraph``` directory on your webserver!  Admire pretty graphs (actually, they won't be all that pretty until it has collected some data).
 
