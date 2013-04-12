@@ -24,12 +24,12 @@ function stuff_we_care_about($info) {
   printf("%s\n", $info->network->last_connection);
   echo "Target temperature  : ";
   if (preg_match("/away/", $info->current_state->mode)) {
-    printf("%.02f\n", c_to_f($info->target->temperature[0]));
+    printf("%.02f\n", $info->target->temperature[0]);
   } else {
-    printf("%.02f\n", c_to_f($info->target->temperature));
+    printf("%.02f\n", $info->target->temperature);
   }
   echo "Current temperature : ";
-  printf("%.02f\n", c_to_f($info->current_state->temperature));
+  printf("%.02f\n", $info->current_state->temperature);
   echo "Current humidity    : ";
   printf("%d\n", $info->current_state->humidity);
 
