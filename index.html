@@ -141,7 +141,7 @@ function brushUpdate() {
 }
 
 // fetch the data
-d3.tsv("/nestgraph/fetch.php?hrs=" + hours, function(error, data) {
+d3.tsv("fetch.php?hrs=" + hours, function(error, data) {
   color.domain(d3.keys(data[0]).filter(function(key) { return (key == "current" || key == "target" || key == "heating"); }));
 
   data.forEach(function(d) {
