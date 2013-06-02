@@ -142,7 +142,7 @@ function brushUpdate() {
 
 // fetch the data
 d3.tsv("fetch.php?hrs=" + hours, function(error, data) {
-  color.domain(d3.keys(data[0]).filter(function(key) { return (key == "current" || key == "target" || key == "heating"); }));
+  color.domain(d3.keys(data[0]).filter(function(key) { return (key == "current" || key == "target" || key == "heating"|| key == "cooling"|| key == "fan"|| key == "autoAway"|| key == "manualAway"|| key == "leaf"|| key == "humidity"); }));
 
   data.forEach(function(d) {
     d.date = parseDate(d.timestamp);
@@ -153,7 +153,17 @@ d3.tsv("fetch.php?hrs=" + hours, function(error, data) {
       name: name,
       values: data.map(function(d) {
 	if (name == "heating") 
-          return { date: d.date, val: +d[name] + 60 };
+          return { date: d.date, val: +d[name] + 53 };
+	else if(name == "cooling") 
+          return { date: d.date, val: +d[name] + 50 };
+	else if(name == "fan") 
+          return { date: d.date, val: +d[name] + 47 };
+	else if(name == "autoAway") 
+          return { date: d.date, val: +d[name] + 44 };
+	else if(name == "manualAway") 
+          return { date: d.date, val: +d[name] + 41 };
+	else if(name == "leaf") 
+          return { date: d.date, val: +d[name] + 38 };
 	else
           return { date: d.date, val: +d[name] };
       })

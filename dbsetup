@@ -6,6 +6,11 @@ USE nest;
 CREATE TABLE `data` (
   `timestamp` timestamp NOT NULL,
   `heating` tinyint unsigned NOT NULL,
+  `cooling` tinyint unsigned NOT NULL,
+  `fan` tinyint unsigned NOT NULL,
+  `autoAway` tinyint signed NOT NULL,
+  `manualAway` tinyint unsigned NOT NULL,
+  `leaf` tinyint unsigned NOT NULL,
   `target` numeric(7,3) NOT NULL,
   `current` numeric(7,3) NOT NULL,
   `humidity` tinyint unsigned NOT NULL,

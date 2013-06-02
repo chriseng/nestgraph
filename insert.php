@@ -8,8 +8,8 @@ try {
   $db = new DB($config);
   $data = get_nest_data();
   if (!empty($data['timestamp'])) {
-    if ($stmt = $db->res->prepare("REPLACE INTO data (timestamp, heating, target, current, humidity, updated) VALUES (?,?,?,?,?,NOW())")) {
-      $stmt->bind_param("siddi", $data['timestamp'], $data['heating'], $data['target_temp'], $data['current_temp'], $data['humidity']);
+    if ($stmt = $db->res->prepare("REPLACE INTO data (timestamp, heating, cooling, fan, autoAway, manualAway, leaf, target, current, humidity, updated) VALUES (?,?,?,?,?,?,?,?,?,?,NOW())")) {
+      $stmt->bind_param("siiiiiiddi", $data['timestamp'], $data['heating'], $data['cooling'], $data['fan'], $data['autoAway'], $data['manualAway'], $data['leaf'], $data['target_temp'], $data['current_temp'], $data['humidity']);
       $stmt->execute();
       $stmt->close();
     }
