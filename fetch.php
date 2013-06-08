@@ -6,7 +6,7 @@ require 'inc/class.db.php';
 define('DEFAULT_HRS', 72);
 
 $hrs = DEFAULT_HRS; 
-if ($_GET["hrs"]) {
+if (!empty($_GET["hrs"])) {
   $hrs = $_GET["hrs"];
 }
 
