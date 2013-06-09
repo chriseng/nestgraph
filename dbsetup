@@ -6,12 +6,56 @@ USE nest;
 CREATE TABLE `data` (
   `timestamp` timestamp NOT NULL,
   `heating` tinyint unsigned NOT NULL,
+  `cooling` tinyint unsigned NOT NULL,
+  `fan` tinyint unsigned NOT NULL,
+  `autoAway` tinyint signed NOT NULL,
+  `manualAway` tinyint unsigned NOT NULL,
+  `leaf` tinyint unsigned NOT NULL,
   `target` numeric(7,3) NOT NULL,
   `current` numeric(7,3) NOT NULL,
   `humidity` tinyint unsigned NOT NULL,
   `updated` timestamp NOT NULL,
   PRIMARY KEY (`timestamp`),	      
   UNIQUE KEY `timestamp` (`timestamp`)
-)
-ENGINE=MyISAM DEFAULT CHARSET=latin1;
+)ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+CREATE TABLE  `nest`.`cycles_data` (
+  `cycleNum` int(10) unsigned NOT NULL,
+  `cycleDate` datetime NOT NULL,
+  `start` int(10) unsigned NOT NULL,
+  `duration` int(10) unsigned NOT NULL,
+  `type` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`cycleNum`,`cycleDate`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+CREATE TABLE  `nest`.`energy_data` (
+  `energyDate` datetime NOT NULL,
+  `device_timezone_offset` int(11) NOT NULL,
+  `total_heating_time` int(10) unsigned NOT NULL,
+  `total_cooling_time` int(10) unsigned NOT NULL,
+  `total_fan_cooling_time` int(10) unsigned NOT NULL,
+  `total_humidifier_time` int(10) unsigned NOT NULL,
+  `total_dehumidifier_time` int(10) unsigned NOT NULL,
+  `leafs` int(11) NOT NULL,
+  `whodunit` int(11) NOT NULL,
+  `recent_avg_used` int(10) unsigned NOT NULL,
+  `usage_over_avg` int(10) NOT NULL,
+  PRIMARY KEY (`energyDate`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+CREATE TABLE  `nest`.`events_data` (
+  `eventNum` int(10) unsigned NOT NULL,
+  `eventDate` datetime NOT NULL,
+  `start` int(10) unsigned NOT NULL,
+  `end` int(10) unsigned NOT NULL,
+  `type` int(10) unsigned NOT NULL,
+  `touched_by` int(10) unsigned NOT NULL,
+  `touched_when` int(10) unsigned NOT NULL,
+  `touched_timezone_offset` int(11) NOT NULL,
+  `touched_where` int(11) NOT NULL,
+  `heat_temp` int(11) NOT NULL,
+  `cool_temp` int(11) NOT NULL,
+  `continuation` int(11) NOT NULL,
+  `event_touched_by` int(11) NOT NULL,
+  PRIMARY KEY (`eventNum`,`eventDate`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;

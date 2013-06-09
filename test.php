@@ -11,27 +11,28 @@ $nest = new Nest();
 
 $status = $nest->getStatus();
 print_r($status);
+echo "\n<br>\n<br>";
 
 $infos = $nest->getDeviceInfo();
 print_r($infos);
-
+echo "\n<br>\n<br>";
 stuff_we_care_about($infos);
 
 function stuff_we_care_about($info) {
   echo "Heating             : ";
-  printf("%s\n", ($info->current_state->heat == 1 ? 1 : 0));
+  printf("%s\n<br>", ($info->current_state->heat == 1 ? 1 : 0));
   echo "Timestamp           : ";
-  printf("%s\n", $info->network->last_connection);
+  printf("%s\n<br>", $info->network->last_connection);
   echo "Target temperature  : ";
   if (preg_match("/away/", $info->current_state->mode)) {
-    printf("%.02f\n", $info->target->temperature[0]);
+    printf("%.02f\n<br>", $info->target->temperature[0]);
   } else {
-    printf("%.02f\n", $info->target->temperature);
+    printf("%.02f\n<br>", $info->target->temperature);
   }
   echo "Current temperature : ";
-  printf("%.02f\n", $info->current_state->temperature);
+  printf("%.02f\n<br>", $info->current_state->temperature);
   echo "Current humidity    : ";
-  printf("%d\n", $info->current_state->humidity);
+  printf("%d\n<br>", $info->current_state->humidity);
 
 }
 

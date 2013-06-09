@@ -6,7 +6,7 @@ require 'inc/class.db.php';
 define('DEFAULT_HRS', 72);
 
 $hrs = DEFAULT_HRS; 
-if ($_GET["hrs"]) {
+if (!empty($_GET["hrs"])) {
   $hrs = $_GET["hrs"];
 }
 
@@ -15,11 +15,11 @@ try {
   if ($stmt = $db->res->prepare("SELECT * from data where timestamp>=DATE_SUB(NOW(), INTERVAL ? HOUR) order by timestamp")) {
     $stmt->bind_param("i", $hrs);
     $stmt->execute();
-    $stmt->bind_result($timestamp, $heating, $target, $current, $humidity, $updated);
+    $stmt->bind_result($timestamp, $heating, $cooling, $fan, $autoAway, $manualAway, $leaf, $target, $current, $humidity, $updated);
     header("Content-type: text/tab-separated-values");
-    print "timestamp\theating\ttarget\tcurrent\thumidity\tupdated\n";
+    print "timestamp\theating\tcooling\tfan\tautoAway\tmanualAway\tleaf\ttarget\tcurrent\thumidity\tupdated\n";
     while ($stmt->fetch()) {
-      print implode("\t", array($timestamp, $heating, $target, $current, $humidity, $updated)) . "\n";
+      print implode("\t", array($timestamp, $heating, $cooling, $fan, $autoAway, $manualAway, $leaf, $target, $current, $humidity, $updated)) . "\n";
     }
     $stmt->close();
   }
