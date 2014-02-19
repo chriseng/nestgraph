@@ -8,10 +8,10 @@ define('PASSWORD', $config['nest_pass']);
 
 date_default_timezone_set($config['local_tz']);
 
-function get_nest_data() {
+function get_nest_data($serial_number=null) {
   $nest = new Nest();
-  $info = $nest->getDeviceInfo();
-  $energy = $nest->getEnergyLatest();
+  $info = $nest->getDeviceInfo($serial_number);
+  $energy = $nest->getEnergyLatest($serial_number);
   
   //Change nulls to 0
   foreach ($energy->days as &$day)

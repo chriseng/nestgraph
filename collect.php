@@ -8,9 +8,9 @@ define('PASSWORD', $config['nest_pass']);
 
 date_default_timezone_set($config['local_tz']);
 
-function get_nest_data() {
+function get_nest_data($serial_number=null) {
   $nest = new Nest();
-  $info = $nest->getDeviceInfo();
+  $info = $nest->getDeviceInfo($serial_number);
   
   if (preg_match("/away/", $info->current_state->mode) || preg_match("/range/", $info->current_state->mode)) {
     if ($info->current_state->temperature > $info->target->temperature[1]) {
