@@ -70,6 +70,12 @@ As root or using a DBA account, run the commands in dbsetup to create the MySQL 
 mysql -u root < dbsetup
 ```
 
+Add your nests to the database.
+
+```bash
+php init_devices.php
+```
+
 Create a cron job to poll the website periodically and update the local database. The thermostat does not phone home on a fixed schedule, but typically it updates in 5 to 30 minute intervals. The script will only insert into the database if there is new data available. Obviously, update the path to ```insert.php``` if it's not in ```/var/www/html/nestgraph```.
 
 ```bash
@@ -77,14 +83,11 @@ Create a cron job to poll the website periodically and update the local database
 ```
 (FYI, the reason we remove the files in ```/tmp``` is because it seems the nest-api library attempts to cache authentication info too aggressively, and after a few days it ends up trying to connect to an AWS server that no longer exists.)
 
-Point web browser to the ```nestgraph``` directory on your webserver!  Admire pretty graphs (actually, they won't be all that pretty until it has collected some data).
+Point web browser to the ```nestgraph/index.php``` directory on your webserver!  Admire pretty graphs (actually, they won't be all that pretty until it has collected some data).
 
 
 ## Known Issues
 
-* Only checks for heating on/off, not cooling (I don't have cooling)
-* Only supports a single Nest thermostat (I only have one)
-* Heating on/off trendline lazily mapped on to the temperature graph
 * Assumes you want temperatures displayed in Fahrenheit
 * Doesn't automatically redraw when you resize the browser window
 * Labels (current/target/heating) don't follow the trend lines when you pan/zoom
