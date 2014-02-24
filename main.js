@@ -1,37 +1,4 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-<head>
-  <title>NestGraph</title>
-  <style>
-
-body {
-  font: 11px tahoma, arial, sans-serif;
-}
-
-  .axis path,
-  .axis line {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
-  }
-
-  .line {
-    fill: none;
-    stroke: steelblue;
-    stroke-width: 2.0px;
-  }
-
-  .brush .extent {
-    stroke: #fff;
-    fill-opacity: .125;
-    shape-rendering: crispEdges;
-  }
-
-  </style>
-</head>
-<body>
-  <script src="http://d3js.org/d3.v3.min.js"></script>
-  <script>
+var device_id = 1;
 
 // change this if you want to limit the amount of data pulled
 var hours = 24 * 7;
@@ -41,8 +8,8 @@ var fullHeight = window.innerHeight * 0.95;
 var upperHeight = window.innerHeight * 0.85;
 var lowerHeight = window.innerHeight * 0.10;
 
-var margin = {top: 20, right: 50, bottom: 30 + lowerHeight, left: 50};
-var margin2 = {top: 20 + upperHeight, right: 50, bottom: 30, left: 50};
+var margin = {top: 20, right: 70, bottom: 30 + lowerHeight, left: 50};
+var margin2 = {top: 20 + upperHeight, right: 70, bottom: 30, left: 50};
 
 var width = fullWidth - margin.left - margin.right;
 var height = fullHeight - margin.top - margin.bottom;
@@ -53,8 +20,10 @@ var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
 
 var x = d3.time.scale().range([0, width]);
 var y = d3.scale.linear().range([height, 0]);
+var yRight = d3.scale.linear().range([height, 0]);
 var x2 = d3.time.scale().range([0, width]);
 var y2 = d3.scale.linear().range([height2, 0]);
+var yRight2 = d3.scale.linear().range([height2, 0]);
 
 var color = d3.scale.category10();
 
@@ -68,6 +37,11 @@ var xAxis = d3.svg.axis().
 var yAxis = d3.svg.axis()
   .scale(y)
   .orient("left");
+
+// d3 y axis object for upper plot area
+var yRightAxis = d3.svg.axis()
+  .scale(yRight)
+  .orient("right");
 
 // d3 x axis object for lower plot area
 var xAxis2 = d3.svg.axis()
@@ -86,12 +60,24 @@ var line = d3.svg.line()
   .x(function(d) { return x(d.date); })
   .y(function(d) { return y(d.val); });
 
+// d3 line object for upper trendlines (basis plot)
+var lineRight = d3.svg.line()
+  .interpolate("basis")
+  .x(function(d) { return x(d.date); })
+  .y(function(d) { return yRight(d.val); });
+
 // d3 line object for lower trendlines (basis plot)
 var line2 = d3.svg.line()
   .interpolate("basis")
   .x(function(d) { return x2(d.date); })
   .y(function(d) { return y2(d.val); });
 
+// d3 line object for lower trendlines (basis plot)
+var lineRight2 = d3.svg.line()
+  .interpolate("basis")
+  .x(function(d) { return x2(d.date); })
+  .y(function(d) { return yRight2(d.val); });
+//
 // d3 line object for upper trendlines (step function)
 var lineStepafter = d3.svg.line()
   .interpolate("step-after")
@@ -132,6 +118,8 @@ function brushUpdate() {
     .attr("d", function(d) { 
       if (d.name == "current") 
 	return line(d.values); 
+      else if (d.name == "humidity")
+	return lineRight(d.values); 
       else
 	return lineStepafter(d.values); 
     })
@@ -140,35 +128,30 @@ function brushUpdate() {
     .attr("cy", function(d) { return y(d.val); }) 
 }
 
+function fetchData() {
 // fetch the data
-d3.json("fetch.php?hrs=" + hours, function(error, data) {
-  color.domain(d3.keys(data[0]).filter(function(key) { return (key == "current" || key == "target" || key == "heating"|| key == "cooling"|| key == "fan"|| key == "autoAway"|| key == "manualAway"|| key == "leaf"|| key == "humidity"); }));
-
+d3.json("fetch.php?id=" + device_id + "&hrs=" + hours, function(error, data) {
+  color.domain(d3.keys(data[0]).filter(function(key) { return (key == "current" || key == "target" || key == "target2" || key == "humidity"); }));
   data.forEach(function(d) {
     d.date = parseDate(d.timestamp);
   });
-  
+
   var points = color.domain().map(function(name) {
     var x = {
       name: name,
       values: data.map(function(d) {
-	if (name == "heating") 
-          return { date: d.date, val: +d[name] + 53 };
-	else if(name == "cooling") 
-          return { date: d.date, val: +d[name] + 50 };
-	else if(name == "fan") 
-          return { date: d.date, val: +d[name] + 47 };
-	else if(name == "autoAway") 
-          return { date: d.date, val: +d[name] + 44 };
-	else if(name == "manualAway") 
-          return { date: d.date, val: +d[name] + 41 };
-	else if(name == "leaf") 
-          return { date: d.date, val: +d[name] + 38 };
+	if(name == "target2")
+          return { date: d.date, val: d[name] };
+	  //if( d[name] == null) 
+	  //else 
+          //return { date: d.date, val: +d[name] };
 	else
-          return { date: d.date, val: +d[name] };
+	  var xmode = "black";
+	  if  (d["cooling"] == 1) { xmode = "blue";} else if (d["heating"] == 1) { xmode =  "red"; } 
+          return { date: d.date, val: +d[name], mode: xmode };
       })
     };
-    console.log(x);
+    //console.log(x);
     return x;
   });
 
@@ -178,10 +161,15 @@ d3.json("fetch.php?hrs=" + hours, function(error, data) {
 
   // define the y-domains (i.e. min and max of the union of all the trendlines)
   y.domain([
-      +d3.min(points, function(c) { return d3.min(c.values, function(v) { return v.val }); }),
+      +d3.min(points, function(c) { if (c.name == "target" || (c.name == "target2" && c.values != null) || c.name == "current") { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 0.5,
       +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); }) + 0.5
   ]);
+  yRight.domain([
+      +d3.min(points, function(c) { if (c.name == "humidity") { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 0.5,
+      +d3.max(points, function(c) { if (c.name == "humidity") { return d3.max(c.values, function(v) { return v.val }); } else { return undefined; } }) + 0.5 
+  ]);
   y2.domain(y.domain());
+  yRight2.domain(yRight.domain());
 
   // draw upper x axis
   upper.append("g")
@@ -200,6 +188,17 @@ d3.json("fetch.php?hrs=" + hours, function(error, data) {
     .style("text-anchor", "end")
     .text("Temperature (F)");
   
+  upper.append("g")
+    .attr("class", "y axis upper")
+    .attr("transform", "translate(" + (width+15) + ",0)")
+    .call(yRightAxis)
+    .append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -12)
+    .attr("dy", ".71em")
+    .style("text-anchor", "end")
+    .text("Humidity (%)");
+  //
   // draw lower x axis
   lower.append("g")
     .attr("class", "x axis lower")
@@ -208,19 +207,13 @@ d3.json("fetch.php?hrs=" + hours, function(error, data) {
 
   // bind upper current/trendlines
   upper.selectAll(".plot.temps")
-    .data(points.filter(function(f) { return f.name != 'heating'; }))
+    .data(points.filter(function(f) { return (f.name == 'current' || f.name == 'humidity' || f.name == 'target' || (f.name == 'target2' && f.values != null)  ); }))
     .enter().append("g")
     .attr("class", function(d) { return "plot temps " + d.name; });
 
-  // bind upper furnace trendline
-  upper.selectAll(".plot.furnace")   // TODO: something different with the heating on/off data
-    .data(points.filter(function(f) { return f.name == 'heating'; }))
-    .enter().append("g")
-    .attr("class", function(d) { return "plot furnace " + d.name; });
-
   // bind lower current and target trendlines
   lower.selectAll(".plot.temps")
-    .data(points.filter(function(f) { return f.name != 'heating'; }))
+    .data(points.filter(function(f) { return (f.name == 'current' || f.name == 'humidity' || f.name == 'target' || (f.name == 'target2' && f.values != null)); }))
     .enter().append("g")
     .attr("class", function(d) { return "plot temps " + d.name; });
 
@@ -231,11 +224,16 @@ d3.json("fetch.php?hrs=" + hours, function(error, data) {
     .attr("d", function(d) { 
       if (d.name == "current") 
 	return line(d.values); 
+      else if (d.name == "humidity")
+	return lineRight(d.values); 
       else
 	return lineStepafter(d.values); 
     })
     .style("stroke", function(d) { 
-      return color(d.name); 
+      if (d.name == 'target2')
+      	return color('target'); 
+      else 	
+        return color(d.name); 
     })
     .attr("clip-path", "url(#clip)");
 
@@ -246,19 +244,17 @@ d3.json("fetch.php?hrs=" + hours, function(error, data) {
     .attr("d", function(d) { 
       if (d.name == "current") 
 	return line2(d.values); 
+      else if (d.name == "humidity")
+	return lineRight2(d.values); 
       else
 	return lineStepafter2(d.values); 
     })
-    .style("stroke", function(d) { return color(d.name); });
-
-  // draw upper labels
-  upper.selectAll(".plot")
-    .append("text")
-    .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
-    .attr("transform", function(d) { return "translate(" + x(d.value.date) + "," + y(d.value.val) + ")"; })
-    .attr("x", 3)
-    .attr("dy", ".35em")
-    .text(function(d) { return d.name; });
+    .style("stroke", function(d) { 
+      if (d.name == 'target2')
+      	return color('target'); 
+      else 	
+        return color(d.name); 
+    });
 
   // create a parent element for the circles to live
   upper.selectAll(".current")
@@ -273,10 +269,10 @@ d3.json("fetch.php?hrs=" + hours, function(error, data) {
     .enter().append("circle")
     .attr("cx", function(d) { return x(d.date); }) 
     .attr("cy", function(d) { return y(d.val); }) 
-    .attr("r", 10) 
-    .attr("stroke", "black")
-    .attr("stroke-width", 1)
-    .attr("opacity", 0.1) 
+    .attr("r", 5) 
+    .attr("stroke", function(d) { return (d.mode); })
+    .attr("fill", function(d) { return (d.mode); })
+    .attr("opacity", 0.2) 
     .append("svg:title").text(function(d) {
       return format(d.date) + "\n" + d.val + "\u00B0 F";
     });
@@ -288,8 +284,60 @@ d3.json("fetch.php?hrs=" + hours, function(error, data) {
     .selectAll("rect")
     .attr("y", -6)
     .attr("height", height2 + 7);
-});
 
-</script>
-</body>
-</html>
+  // draw legend	
+  var legend = svg.append("g")
+    .attr("class", "legend")
+    .attr("x", 365)
+    .attr("y", 325)
+    .attr("height", 100)
+    .attr("width", 100);
+  
+  legend.selectAll('g')
+  .data(points.filter(function(f) { return f.name != 'target2'; }))
+  .enter()
+  .append('g')
+  .each(function(d, i) {
+     var g = d3.select(this);
+     g.append("rect")
+       .attr("x", width - 65)
+       .attr("y", i*25)
+       .attr("width", 10)
+       .attr("height", 10)
+       .style("fill", function(d) { return color(d.name); });
+     
+     g.append("text")
+       .attr("x", width - 50)
+       .attr("y", i * 25 + 8)
+       .attr("height",30)
+       .attr("width",100)
+       .style("fill", function(d) { return color(d.name); })
+       .text(d.name);
+  
+  });
+});
+}
+function clearData() {
+ lower.selectAll("rect").remove();
+ lower.selectAll(".plot").remove();
+ lower.selectAll(".x.axis").remove();
+ lower.selectAll(".y.axis").remove();
+ upper.selectAll(".plot").remove();
+ upper.selectAll(".x.axis").remove();
+ upper.selectAll(".y.axis").remove();
+ upper.selectAll(".yRight.axis").remove();
+}
+
+  fetchData();
+window.onload=function(){
+  document.getElementById("device_id").onchange=
+  function () {
+        var aList = document.getElementById("device_id");
+        window.device_id = aList.options[aList.selectedIndex].value;
+	clearData();
+	fetchData();
+	if (!brush.empty()) {
+	  brushUpdate();
+	}
+  }
+}

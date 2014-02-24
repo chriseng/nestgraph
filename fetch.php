@@ -14,18 +14,32 @@ $id = DEFAULT_ID;
 if (!empty($_GET["id"])) {
   $id = $_GET["id"];
 }
-
+$json = array();
 try {
   $db = new DB($config);
-  if ($stmt = $db->res->prepare("SELECT * from data where device_id=? and timestamp>=DATE_SUB(NOW(), INTERVAL ? HOUR) order by timestamp")) {
+  if ($stmt = $db->res->prepare("SELECT timestamp, heating, cooling, fan, autoAway, manualAway, leaf, target, target2, current, humidity, updated " .
+                                "from data where device_id=? and timestamp>=DATE_SUB(NOW(), INTERVAL ? HOUR) order by timestamp")) {
     $stmt->bind_param("ii", $id, $hrs);
     $stmt->execute();
-    $stmt->bind_result($device_id, $timestamp, $heating, $cooling, $fan, $autoAway, $manualAway, $leaf, $target, $current, $humidity, $updated);
-    header("Content-type: text/tab-separated-values");
-    print "timestamp\theating\tcooling\tfan\tautoAway\tmanualAway\tleaf\ttarget\tcurrent\thumidity\tupdated\n";
+    $stmt->bind_result($timestamp, $heating, $cooling, $fan, $autoAway, $manualAway, $leaf, $target, $target2, $current, $humidity, $updated);
+    header('Content-type: application/json');
+    $i=0;
     while ($stmt->fetch()) {
-      print implode("\t", array($timestamp, $heating, $cooling, $fan, $autoAway, $manualAway, $leaf, $target, $current, $humidity, $updated)) . "\n";
+     $json[$i]['timestamp'] = $timestamp;
+     $json[$i]['heating'] = $heating;
+     $json[$i]['cooling'] = $cooling;
+     $json[$i]['fan'] = $fan;
+     $json[$i]['autoAway'] = $autoAway;
+     $json[$i]['manualAway'] = $manualAway;
+     $json[$i]['leaf'] = $leaf;
+     $json[$i]['target'] = $target;
+     $json[$i]['target2'] = $target2;
+     $json[$i]['current'] = $current;
+     $json[$i]['humidity'] = $humidity;
+     $json[$i]['updated'] = $updated;
+     $i++;
     }
+    print json_encode($json);
     $stmt->close();
   }
   $db->close();

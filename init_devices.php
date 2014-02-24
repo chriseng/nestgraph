@@ -14,7 +14,7 @@ $db = new DB($config);
 $devices= $nest->getDevices();
 if ($stmt = $db->res->prepare("INSERT INTO devices (serial,name) VALUES (?,?) ON DUPLICATE KEY UPDATE name=?")) {
     foreach($devices as $serial) {
-        $name = $nest->getDeviceFriendlyName($serial);
+        $name = $nest->getDeviceInfo($serial)->name;
         $stmt->bind_param("sss", $serial, $name, $name);
         $stmt->execute();
     }

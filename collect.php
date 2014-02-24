@@ -13,27 +13,8 @@ function get_nest_data($serial_number=null) {
   $info = $nest->getDeviceInfo($serial_number);
   
   if (preg_match("/away/", $info->current_state->mode) || preg_match("/range/", $info->current_state->mode)) {
-    if ($info->current_state->temperature > $info->target->temperature[1]) {
-      //Hotter then upper temp
-      $targetTemp = $info->target->temperature[1];
-    }
-    else if ($info->current_state->temperature < $info->target->temperature[0]) {
-      //Colder then lower temp
       $targetTemp = $info->target->temperature[0];
-    }
-    else {
-      if (($info->target->temperature[1] - $info->current_state->temperature) <
-          ($info->current_state->temperature - $info->target->temperature[0]))
-      {
-        //Closer to upper temp
-        $targetTemp = $info->target->temperature[1];
-      }
-      else
-      {
-        //Closer to lower temp
-      $targetTemp = $info->target->temperature[0];
-      }
-    }
+      $targetTemp2 = $info->target->temperature[1];
   }
   else {
     $targetTemp = $info->target->temperature;
@@ -47,14 +28,11 @@ function get_nest_data($serial_number=null) {
                 'leaf'         => ($info->current_state->leaf == 1 ? 1 : 0),
                 'timestamp'    => $info->network->last_connection,
                 'target_temp'  => sprintf("%.02f", $targetTemp),
+                'target_temp2' => (isset($targetTemp2) ? sprintf("%.02f", $targetTemp2) : null),
                 'current_temp' => sprintf("%.02f", $info->current_state->temperature),
                 'humidity'     => $info->current_state->humidity
                );
   return $data;
-}
-
-function c_to_f($c) {
-  return ($c * 1.8) + 32;
 }
 
 ?>

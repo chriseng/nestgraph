@@ -21,6 +21,7 @@ CREATE TABLE `nest`.`data` (
   `manualAway` tinyint unsigned NOT NULL,
   `leaf` tinyint unsigned NOT NULL,
   `target` numeric(7,3) NOT NULL,
+  `target2` numeric(7,3),
   `current` numeric(7,3) NOT NULL,
   `humidity` tinyint unsigned NOT NULL,
   `updated` timestamp NOT NULL,
