@@ -14,34 +14,51 @@ function get_nest_data($serial_number=null) {
   $energy = $nest->getEnergyLatest($serial_number);
   
   //Change nulls to 0
-  foreach ($energy->days as &$day)
+  foreach($energy->objects as &$object)
   {
-    foreach ($day->events as &$events)
+    $value = $object->value;
+    foreach ($value->days as &$day)
     {
-      if ( empty($events -> continuation) )
+      foreach ($day->events as &$events)
       {
-        $events -> continuation = 0;
+        if ( empty($events -> continuation) )
+        {
+          $events -> continuation = 0;
+        }
+        if ( empty($events -> touched_by) )
+        {
+          $events -> touched_by = 0;
+        }
+        if ( empty($events -> touched_when) )
+        {
+          $events -> touched_when = 0;
+        }
+        if ( empty($events -> touched_timezone_offset) )
+        {
+          $events -> touched_timezone_offset = 0;
+        }
+        if ( empty($events -> touched_where) )
+        {
+          $events -> touched_where = 0;
+        }
+        if ( empty($events -> heat_temp) )
+        {
+          $events -> heat_temp = 0;
+        }
+        if ( empty($events -> heat_temp) )
+        {
+          $events -> heat_temp = 0;
+        }
+        if ( empty($events -> cool_temp) )
+        {
+          $events -> cool_temp = 0;
+        }
       }
-      if ( empty($events -> touched_by) )
-      {
-        $events -> touched_by = 0;
-      }
-      if ( empty($events -> touched_when) )
-      {
-        $events -> touched_when = 0;
-      }
-      if ( empty($events -> touched_timezone_offset) )
-      {
-        $events -> touched_timezone_offset = 0;
-      }
-      if ( empty($events -> touched_where) )
-      {
-        $events -> touched_where = 0;
-      }
+      unset($events);
     }
-    unset($events);
+    unset($day);
   }
-  unset($day);
+  unset($object);
   
   return $energy;  
 }
