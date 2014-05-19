@@ -44,6 +44,16 @@ wget https://github.com/gboudreau/nest-api/archive/master.zip
 unzip master.zip
 rm -f master.zip
 ```
+or
+```
+git clone https://github.com/gboudreau/nest-api.git nest-api-master
+```
+
+Grab a copy of the yahoo weather api.
+```
+git clone https://github.com/phront/Yahoo-Weather-API-PHP-class.git yahoo-api-master
+```
+
 Open ```inc/config.php``` in a text editor and update the ```nest_user``` and ```nest_pass``` variables with your username and password for nest.com.  Update the ```local_tz``` variable to reflect your time zone.
 
 Run the test script to make sure that the API is able to pull your thermostat data correctly from nest.com.

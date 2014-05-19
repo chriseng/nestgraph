@@ -5,7 +5,8 @@
   <link rel='stylesheet'  type='text/css' href='nest.css'>
 </head>
 <body>
-<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<!--<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> -->
+<script src="d3.min.js" charset="utf-8"></script>
 <?php 
 require 'inc/config.php';
 require 'inc/class.db.php';
