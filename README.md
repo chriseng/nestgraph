@@ -20,12 +20,14 @@ I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Docu
 * Lower mini-chart is interactive pan-and-zoom of the upper chart
 * Hover over the gray circles to get the exact timestamp and temperature
 
-![nestgraph screenshot](https://github.com/chriseng/nestgraph/raw/master/nestgraph-screenshot.png)
+![nestgraph screenshot](https://github.com/mycon/nestgraph/raw/master/nestgraph-screenshot.png)
 
 ## Dependencies
 
 * LAMP stack
 * Unofficial [nest-api](https://github.com/gboudreau/nest-api) library by Guillaume Boudreau
+* Yahoo Weather API (https://github.com/phront/Yahoo-Weather-API-PHP-class.git yahoo-api-master)
+* D3 Js Library (https://www.d3js.org)
 
 ## Getting Started
 
@@ -53,6 +55,8 @@ Grab a copy of the yahoo weather api.
 ```
 git clone https://github.com/phront/Yahoo-Weather-API-PHP-class.git yahoo-api-master
 ```
+
+Grab a copy of d3js from http://d3js.org/
 
 Open ```inc/config.php``` in a text editor and update the ```nest_user``` and ```nest_pass``` variables with your username and password for nest.com.  Update the ```local_tz``` variable to reflect your time zone.
 
