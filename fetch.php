@@ -91,13 +91,13 @@ try {
       $where_stmt = "timestamp BETWEEN " . $time_start . " AND " . $time_end;
     }
     
-    $sql_query = "SELECT timestamp, heating, cooling, fan, autoAway, manualAway, leaf, target, target2, current, humidity, outside, updated from data where device_id=? and " . $where_stmt . " order by timestamp";
+    $sql_query = "SELECT timestamp, heating, cooling, fan, autoAway, manualAway, leaf, target, target2, current, humidity, outsideTemperature, updated from data where device_id=? and " . $where_stmt . " order by timestamp";
     //print $sql_query;
     
     if ($stmt = $db->res->prepare( $sql_query)) {
       $stmt->bind_param("i", $id);
       $stmt->execute();
-      $stmt->bind_result($timestamp, $heating, $cooling, $fan, $autoAway, $manualAway, $leaf, $target, $target2, $current, $humidity, $outside, $updated);
+      $stmt->bind_result($timestamp, $heating, $cooling, $fan, $autoAway, $manualAway, $leaf, $target, $target2, $current, $humidity, $outsideTemperature, $updated);
       header('Content-type: application/json');
       $i=0;
       while ($stmt->fetch()) {
@@ -112,7 +112,7 @@ try {
        $json[$i]['target2'] = $target2;
        $json[$i]['current'] = $current;
        $json[$i]['humidity'] = $humidity;
-       $json[$i]['outside'] = $outside;
+       $json[$i]['outsideTemperature'] = $outsideTemperature;
        $json[$i]['updated'] = $updated;
        $i++;
       }

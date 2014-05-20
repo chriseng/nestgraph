@@ -10,6 +10,8 @@ try {
 
   $yahoo = new YahooWeather((int)$config["local_woeid"]);
   $temperature = sprintf("%.02f", $yahoo->getTemperature(false));
+  $humid = sprintf("%.02f", $yahoo->getHumidity(false));
+  $pressure = sprintf("%.02f", $yahoo->getPressure(false));
   //echo "Temperature:" . $temperature . "\n";
   
   
@@ -20,11 +22,11 @@ try {
       
       if (!empty($data['timestamp'])) 
       {
-        if ($stmt = $db->res->prepare("REPLACE INTO data (device_id, timestamp, heating, cooling, fan, autoAway, manualAway, leaf, target, target2, current, humidity, outside, updated) " .
-                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())")) 
+        if ($stmt = $db->res->prepare("REPLACE INTO data (device_id, timestamp, heating, cooling, fan, autoAway, manualAway, leaf, target, target2, current, humidity, outsideTemperature,outsideHumidity,outsidePressure, updated) " .
+                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())")) 
         {
-          $stmt->bind_param("isiiiiiidddii", $row[0], $data['timestamp'], $data['heating'], $data['cooling'], $data['fan'], $data['autoAway'], $data['manualAway'], $data['leaf'], 
-                          $data['target_temp'], $data['target_temp2'],  $data['current_temp'], $data['humidity'],$temperature);
+          $stmt->bind_param("isiiiiiidddiiii", $row[0], $data['timestamp'], $data['heating'], $data['cooling'], $data['fan'], $data['autoAway'], $data['manualAway'], $data['leaf'], 
+                          $data['target_temp'], $data['target_temp2'],  $data['current_temp'], $data['humidity'],$temperature, $humid, $pressure);
           if (!$stmt->execute()) 
           {
             echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error;

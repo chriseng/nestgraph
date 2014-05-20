@@ -25,7 +25,9 @@ CREATE TABLE `nest`.`data` (
   `current` numeric(7,3) NOT NULL,
   `humidity` tinyint unsigned NOT NULL,
   `updated` timestamp NOT NULL,
-  `outside` numeric(7,3) NOT NULL,
+  `outsideTemperature` numeric(7,3) NOT NULL,
+  `outsideHumidity` numeric(7,3) NOT NULL,
+  `outsidePressure` numeric(7,3) NOT NULL,
   PRIMARY KEY (`device_id`,`timestamp`) USING BTREE
 )ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
