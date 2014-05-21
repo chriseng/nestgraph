@@ -118,6 +118,35 @@
                    }
                    
             };
+          
+          var line_colors = {
+              colors: {
+                heating: d3.rgb('#993300'),
+                cooling: d3.rgb('#84c4fa'),
+                fan: d3.rgb('#fce692'),
+                humid: d3.rgb('#608f1b'),
+                dehumid: d3.rgb('#ffe4c4'),
+                autoAway: d3.rgb('#003399'),
+                manualAway: d3.rgb('#cc6600'),
+                leaf: d3.rgb('#005500'),
+                target: d3.rgb('#9c399c'),
+                current: "black",
+                humidity: d3.rgb('#608f1b'),
+                outsideTemperature: "blue"
+                
+              },
+              
+              random_color: d3.scale.category10(),
+              
+              get_color: function(key) {
+                var color = this.colors[key];
+                if( color == undefined) {
+                  color = this.random_color(key);
+                }
+                return color;
+              }
+          
+          };
 
           graph_info.set_x_y_scale();
           
@@ -205,28 +234,23 @@
                 var xcolor = "black";
                 var xval = 0;
                 if  (key == "cooling") {
-                  xcolor = d3.rgb('#84c4fa');
                   xval = d.cooling / 60;
                 } 
                 else if (key == "heating") {
-                  xcolor = d3.rgb('#993300');
                   xval = d.heating / 60; 
                 }
                 else if (key == "fan") {
-                  xcolor =  d3.rgb('#fce692'); 
                   xval = d.fan / 60;
                 } 
                 else if (key == "humid") {
-                  xcolor =  d3.rgb('#608f1b');
                   xval = d.humid / 60;
                 }
                 else if (key == "dehumid") {
-                  xcolor =  d3.rgb('#ffe4c4');
                   xval = d.dehumid / 60;
                 }
                 
                 data_array.push( { name: key,
-                                    color: xcolor,
+                                    color: line_colors.get_color(key),
                                     val: xval,
                                     date: parseDate(d.timestamp)
                                     } );
@@ -294,6 +318,30 @@
               .attr("height", function(d) { return this_plot.height - this_plot.y(d.val); })
               .attr("fill", function(d) { return d.color; })
               .attr("fill-opacity", 1);
+              
+            // draw some transparent full height rectangles that have a tooltip for each day with all the values
+            var rect_tooltip_date_format = d3.time.format("%Y-%m-%d (%a)");
+            this_plot.svg_plot.selectAll(".plot.energies")
+              .data(data)
+              .enter()
+              .append("rect")
+              .attr("class", function(d) { return "plot tooltips"})
+              .attr("x", function(d) { return this_plot.x(d.date); })
+              .attr("y", function(d) { return 0; })
+              .attr("width", function(d) { return (this_plot.width / data.length) - 1; }) // - 1 for paeeing
+              .attr("height", function(d) { return this_plot.height; })
+              .attr("fill-opacity", 0)
+              .append("svg:title")
+              .text(function(d) {
+                  var tooltip_string = rect_tooltip_date_format(d.date) + "\n" +
+                      "heating: " + d.heating/60 + "\n" +
+                      "cooling: " + d.cooling/60 + "\n" +
+                      "fan: " + d.fan/60 + "\n" + //fan doesn't ever seem to have non-zero values
+                      "humidifier: " + d.humid/60 + "\n" +
+                      "dehumidifier: " + d.dehumid/60+ "\n" +
+                      "leaf: " + d.leaf;
+                  return  tooltip_string;
+              });
             
             // bind data to the brush plot
             this_brush_plot.svg_plot.selectAll(".plot.energies")
@@ -344,7 +392,7 @@
             events_plot.svg_plot.selectAll(".y.axis").remove();
             
             color.domain(d3.keys(data[0]).filter(function(key) { return (key == "current" || key == "target" //|| key == "target2" 
-                || key == "humidity" || key == "outsideTemperature" 
+                || key == "humidity" || key == "outsideTemperature" || key == "outsideHumidity" || key == "outsidePressure" 
                 || key == 'heating' || key == 'cooling' || key == 'fan' || key == 'autoAway' 
                 || key == 'manualAway' || key == 'leaf'); }));
             data.forEach(function(d) {
@@ -355,45 +403,35 @@
                x = {
                 name: name,
                 values: data.map(function(d) {
-                    var xcolor = "black";
                     var xval = +d[name];
                     switch(name) {
                       case "heating": 
-                          xcolor = d3.rgb('#d50002');
                           xval += 12;
                           break;
                       case "cooling" :
-                          xcolor = d3.rgb('#84c4fa');
                           xval += 10;
                           break;
                       case "fan" :
-                          xcolor = d3.rgb('#fce692'); 
                           xval += 8;
                           break;
                       case "autoAway" :
-                          xcolor = d3.rgb('#003399');
                           xval += 6;
                           break;
                       case "manualAway" :
-                          xcolor =  d3.rgb('#cc6600');
                           xval += 4;
                           break;
                       case "leaf" :
-                          xcolor = d3.rgb('#005500');
                           xval += 2;
                           break;
                       case "target2":
                       case "target" :
-                          xcolor = d3.rgb('#9c399c');
                           break;
                       case "current" :
                           xcolor = "black";
                           break;
                       case "humidity":
-                          xcolor = d3.rgb('#608f1b');
                           break;
                       case "outsideTemperature":
-                          xcolor = "blue";
                           break;
                       default:
                           break;
@@ -416,7 +454,7 @@
                       return { date: d.date, 
                           val: xval, 
                           mode: xmode,
-                          color: xcolor
+                          color: line_colors.get_color(name)
                           };
                     })
                  };
@@ -432,7 +470,9 @@
             // define the y-domains (i.e. min and max of the union of all the trendlines)
             this_plot.y.domain([
                 +d3.min(points, function(c) { if (c.name == "target" //|| (c.name == "target2" && c.values != null) 
-                || c.name == "current" || c.name == "outsideTemperature") { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 1,
+                || c.name == "current" || c.name == "outsideTemperature"
+                || c.name == "outsideHumidity" || c.name == "outsidePressure" 
+                ) { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 1,
                 +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); }) + 1
             ]);
             this_plot.y2.domain([
@@ -491,7 +531,9 @@
             
             // bind nest_data_plot current/trendlines
             this_plot.svg_plot.selectAll(".plot.temps")
-              .data(points.filter(function(f) { return (f.name == 'current' || f.name == 'outsideTemperature' || f.name == 'humidity' || f.name == 'target' || (f.name == 'target2' && f.values != null)  ); }))
+              .data(points.filter(function(f) { return (f.name == 'current' || f.name == 'outsideTemperature' 
+              || f.name == "outsideHumidity" || f.name == "outsidePressure" 
+              || f.name == 'humidity' || f.name == 'target' || (f.name == 'target2' && f.values != null)  ); }))
               .enter().append("g")
               .attr("class", function(d) { return "plot temps " + d.name; });
               
@@ -538,7 +580,8 @@
               .append("path")
               .attr("class", "line")
               .attr("d", function(d) { 
-                if (d.name == "current" || d.name == "outsideTemperature") 
+                if (d.name == "current" || d.name == "outsideTemperature"
+                || d.name == "outsideHumidity" || d.name == "outsidePressure" ) 
                     return this_plot.line(d.values); 
                 else if (d.name == "humidity")
                     return this_plot.lineRight(d.values); 
