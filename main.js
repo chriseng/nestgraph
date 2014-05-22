@@ -17,7 +17,7 @@
                       height : window.innerWidth * 0.80 * .25,
                       width : window.innerWidth * 0.80,
                       margin : {top: 60, right: 60, bottom: 0, left: 50},
-                      hasRightAxis : false
+                      hasRightAxis : true
                       },
                       
                    {
@@ -175,6 +175,7 @@
           graph_info.append_plots(svg);
           
 
+		  var brush_update_in_progress = false;
           // callback function for d3 brush object
           function brushUpdate() {
             brush_main_plot = graph_info.plot_info_arr[0];
@@ -188,7 +189,13 @@
             brush_domain_time[0] = short_date_format(brush_domain[0]);
             brush_domain_time[1] = short_date_format(new Date(+brush_domain[1] + 86400000));
             //console.log(brush_domain_time);
-            setTimeout(function() { fetchData(brush_domain_time); }, 250);
+			
+			if(brush_update_in_progress === false) {
+				brush_update_in_progress = true;
+	            setTimeout(function() { 
+					fetchData(brush_domain_time); 
+					brush_update_in_progress = false;}, 250);
+			}
             
             /*
             brush_main_plot.svg_plot.select(".x.axis").call(brush_main_plot.xAxis);
@@ -219,7 +226,20 @@
               })
               
               */
-          }
+          };
+          
+          function computeAverageTemp(timeRange) {
+			var fetch_string;
+			var parsed_data;
+			if(typeof(timeRange) !== "undefined") {
+				fetch_string = "id=" + device_id + "&start=\"" + timeRange[0] + "\"&end=\"" + timeRange[1] + "\""  + "&data=dailyTemp";
+          		
+				d3.json("fetch.php?" + fetch_string, function(error, data) {
+					parsed_data = data;									
+				});
+			}
+			return parsed_data;
+          };
           
           function fetchEnergy() {
           // fetch the data
@@ -229,6 +249,13 @@
             //console.log(data);
             
             var data_array = [];
+            var temperature_array = { 
+                daily_temperature_average : [],
+                daily_temperature_max : [],
+                daily_temperature_min : []
+                };
+				
+				
             data.forEach(function(d) {
               for( var key in d) {
                 var xcolor = "black";
@@ -255,7 +282,40 @@
                                     date: parseDate(d.timestamp)
                                     } );
               }
-              d.date = parseDate(d.timestamp);
+              
+			  //Parse the date
+			  d.date = parseDate(d.timestamp);
+			  
+              //Simply reload to get the appropriate values
+              if(d.temperature_avg == null)
+              {
+				var date_range = [];
+				var short_date_format = d3.time.format("%Y-%m-%d");
+           		date_range[0] = short_date_format(d.date);
+           		date_range[1] = short_date_format(new Date(+d.date + 86400000));
+                value_array = computeAverageTemp(date_range);
+				
+				if(value_array != undefined)
+				{
+					temperature_array.daily_temperature_average.push( { date: d.date,
+																		val: value_array.temperature_avg});
+					temperature_array.daily_temperature_max.push( { date: d.date,
+																		val: value_array.temperature_max});
+					temperature_array.daily_temperature_min.push( { date: d.date,
+                                                                    val: value_array.temperature_min});
+				}
+
+              }
+              else
+              {
+                temperature_array.daily_temperature_average.push( { date: d.date,
+                                                                    val: d.temperature_avg});
+                temperature_array.daily_temperature_max.push( { date: d.date,
+                                                                    val: d.temperature_max});
+                temperature_array.daily_temperature_min.push( { date: d.date,
+                                                                    val: d.temperature_min});
+              }
+              
             });
             
             
@@ -271,6 +331,8 @@
                 d3.max(data_array, function(d) { return d.val; } ) * 1.1 ];
             this_plot.y.domain(y_domain);
             this_brush_plot.y.domain(y_domain);
+            
+            
 
             // draw nest_data_plot x axis
             this_plot.svg_plot.append("g")

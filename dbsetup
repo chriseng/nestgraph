@@ -54,6 +54,9 @@ CREATE TABLE  `nest`.`energy_data` (
   `whodunit` int(11) NOT NULL,
   `recent_avg_used` int(10) unsigned NOT NULL,
   `usage_over_avg` int(10) NOT NULL,
+  `daily_temp_avg` numeric(7,3),
+  `daily_temp_min` numeric(7,3),
+  `daily_temp_max` numeric(7,3),
   PRIMARY KEY (`device_id`,`energyDate`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 

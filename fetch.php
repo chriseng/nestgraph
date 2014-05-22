@@ -36,12 +36,12 @@ try {
   if($data_type == "energy")
   {
     if($stmt = $db->res->prepare("SELECT energyDate, total_heating_time, total_cooling_time, " . 
-          "total_fan_cooling_time, total_humidifier_time, total_dehumidifier_time, leafs " . 
+          "total_fan_cooling_time, total_humidifier_time, total_dehumidifier_time, leafs, daily_temp_avg, daily_temp_min, daily_temp_max " . 
           "from energy_data where device_id=? order by energyDate"))
     {
       $stmt->bind_param("i", $id);
       $stmt->execute();
-      $stmt->bind_result($energy_date, $heating, $cooling, $fan, $humid, $dehumid, $leafs);
+      $stmt->bind_result($energy_date, $heating, $cooling, $fan, $humid, $dehumid, $leafs, $temp_avg, $temp_min, $temp_max);
       
       header('Content-type: application/json');
       $i=0;
@@ -53,18 +53,86 @@ try {
        $json[$i]['humid'] = $humid;
        $json[$i]['dehumid'] = $dehumid;
        $json[$i]['leaf'] = $leafs;
+       $json[$i]['temperature_avg'] = $temp_avg;
+       $json[$i]['temperature_min'] = $temp_min;
+       $json[$i]['temperature_max'] = $temp_max;
        $i++;
       }
       print json_encode($json);
       $stmt->close();
     }
   }
+  else if($data_type == "dailyTemp")
+  {
+    if($start_and_end) {
+      //$where_stmt = "timestamp BETWEEN \"" . $time_start . "\" AND \"" . $time_end . "\"";
+      $where_stmt = "timestamp BETWEEN " . $time_start . " AND " . $time_end;
+      
+      $sql_query = "SELECT outsideTemperature from data where device_id=? and " . $where_stmt . " order by timestamp";
+      //print $sql_query;
+      
+      if ($stmt = $db->res->prepare( $sql_query)) {
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->bind_result($outsideTemperature);
+        header('Content-type: application/json');
+        $i=0;
+        $temp_min = 1000; //initial value that temp will always be less than
+        $temp_max = -1000;
+        $temp_total = 0;
+        while ($stmt->fetch()) {
+         $temp_total += $outsideTemperature;
+         $temp_min = min($temp_min, $outsideTemperature);
+         $temp_max = max($temp_max, $outsideTemperature);
+         $i++;
+        }
+        $stmt->close();
+        if($i > 0)
+        {
+          $temp_avg = $temp_total/$i;
+          $temp_avg = sprintf("%.02f", $temp_avg);
+          $temp_min = sprintf("%.02f", $temp_min);
+          $temp_max = sprintf("%.02f", $temp_max);
+          
+          $json['temperature_avg'] = $temp_avg;
+          $json['temperature_min'] = $temp_min;
+          $json['temperature_max'] = $temp_max;
+                  
+          //print json_encode($json);
+          $insert_time = str_replace('"', '', $time_start);
+          $insert_time = $insert_time . ' 00:00:00'; //Make a new time string (append all 0s for time after date
+          
+          $sql_query = "UPDATE energy_data SET daily_temp_avg=?, daily_temp_min=?, daily_temp_max=? " .
+              "WHERE device_id=? and energyDate=?";
+          //print $sql_query;
+          if ($stmt = $db->res->prepare($sql_query)) 
+          {
+            //print "Time: $insert_time \n";
+            $stmt->bind_param("iiiis", $temp_avg, $temp_min, $temp_max, $id, $insert_time );
+            if (!$stmt->execute()) 
+            {
+              echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error;
+            }
+            $stmt->close();
+          }
+          
+          print json_encode($json);
+        }
+      }
+    }
+  }
   else if($data_type == "cycles")
   {
-    if($stmt = $db->res->prepare("SELECT cycleDate, cycleNum, start, " . 
-          "duration, type " . 
-          "from cycles_data where device_id=? order by cycleDate"))
-    {
+     $where_stmt = "cycleDate>=DATE_SUB(NOW(), INTERVAL " . $hrs. " HOUR)";
+    if($start_and_end) {
+      //$where_stmt = "timestamp BETWEEN \"" . $time_start . "\" AND \"" . $time_end . "\"";
+      $where_stmt = "cycleDate BETWEEN " . $time_start . " AND " . $time_end;
+    }
+    
+    $sql_query = "SELECT cycleDate, cycleNum, start, duration, type from cycles_data where device_id=? and " . $where_stmt . " order by cycleDate";
+    //print $sql_query;
+    
+    if($stmt = $db->res->prepare( $sql_query)) {
       $stmt->bind_param("i", $id);
       $stmt->execute();
       $stmt->bind_result($cycle_date, $num, $start, $duration, $type);
