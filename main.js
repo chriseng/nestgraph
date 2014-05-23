@@ -132,7 +132,12 @@
                 target: d3.rgb('#9c399c'),
                 current: "black",
                 humidity: d3.rgb('#608f1b'),
-                outsideTemperature: "blue"
+                outsideTemperature: "blue",
+				outsideHumidity: d3.rgb('#e98f1a'),
+				outsidePressure: d3.rgb('#00bdb6'),
+				daily_temperature_average: d3.rgb('#621d30'),
+				daily_temperature_min: d3.rgb('#4169e1'),
+				daily_temperature_max: d3.rgb('#cd0000')
                 
               },
               
@@ -190,6 +195,7 @@
             brush_domain_time[1] = short_date_format(new Date(+brush_domain[1] + 86400000));
             //console.log(brush_domain_time);
 			
+			//Prevent multiple redraws/queries while brush is moving
 			if(brush_update_in_progress === false) {
 				brush_update_in_progress = true;
 	            setTimeout(function() { 
@@ -249,7 +255,7 @@
             //console.log(data);
             
             var data_array = [];
-            var temperature_array = { 
+            var temperature_array = {
                 daily_temperature_average : [],
                 daily_temperature_max : [],
                 daily_temperature_min : []
@@ -276,11 +282,14 @@
                   xval = d.dehumid / 60;
                 }
                 
-                data_array.push( { name: key,
+				if(xval !== 0)
+			  	{
+                	data_array.push( { name: key,
                                     color: line_colors.get_color(key),
                                     val: xval,
                                     date: parseDate(d.timestamp)
                                     } );
+				}
               }
               
 			  //Parse the date
@@ -298,22 +307,22 @@
 				if(value_array != undefined)
 				{
 					temperature_array.daily_temperature_average.push( { date: d.date,
-																		val: value_array.temperature_avg});
+																		val: parseInt(value_array.temperature_avg)});
 					temperature_array.daily_temperature_max.push( { date: d.date,
-																		val: value_array.temperature_max});
+																		val: parseInt(value_array.temperature_max)});
 					temperature_array.daily_temperature_min.push( { date: d.date,
-                                                                    val: value_array.temperature_min});
+                                                                    val: parseInt(value_array.temperature_min)});
 				}
 
               }
               else
               {
                 temperature_array.daily_temperature_average.push( { date: d.date,
-                                                                    val: d.temperature_avg});
+                                                                    val: parseInt(d.temperature_avg)});
                 temperature_array.daily_temperature_max.push( { date: d.date,
-                                                                    val: d.temperature_max});
+                                                                    val: parseInt(d.temperature_max)});
                 temperature_array.daily_temperature_min.push( { date: d.date,
-                                                                    val: d.temperature_min});
+                                                                    val: parseInt(d.temperature_min)});
               }
               
             });
@@ -331,6 +340,12 @@
                 d3.max(data_array, function(d) { return d.val; } ) * 1.1 ];
             this_plot.y.domain(y_domain);
             this_brush_plot.y.domain(y_domain);
+			
+			var y_temperature_domain = [-50, //d3.min(temperature_array.daily_temperature_min, function(d) { return d.val;} ), 
+										d3.max(temperature_array.daily_temperature_max, function(d) { return d.val;} ) ];
+			y_temperature_domain[0] -=	y_temperature_domain[0]*.1;
+			y_temperature_domain[1] +=	y_temperature_domain[1]*.1;	
+			this_plot.y2.domain(y_temperature_domain);	
             
             
 
@@ -350,6 +365,18 @@
               .attr("dy", ".71em")
               .style("text-anchor", "end")
               .text("Duration (Minutes)");
+			  
+			// draw the temperature y axis
+			this_plot.svg_plot.append("g")
+              .attr("class", "y axis nest_data_plot")
+              .attr("transform", "translate(" + (this_plot.width+15) + ",0)")
+              .call(this_plot.yRightAxis)
+              .append("text")
+              .attr("transform", "rotate(-90)")
+              .attr("y", -12)
+              .attr("dy", ".71em")
+              .style("text-anchor", "end")
+              .text("Temperature (degrees F)");
             
             // draw the brush plot x-axis
             this_brush_plot.svg_plot.append("g")
@@ -398,8 +425,9 @@
                   var tooltip_string = rect_tooltip_date_format(d.date) + "\n" +
                       "heating: " + d.heating/60 + "\n" +
                       "cooling: " + d.cooling/60 + "\n" +
-                      "fan: " + d.fan/60 + "\n" + //fan doesn't ever seem to have non-zero values
-                      "humidifier: " + d.humid/60 + "\n" +
+                      //fan doesn't ever seem to have non-zero values
+					  "fan: " + d.fan/60 + "\n" +
+					  "humidifier: " + d.humid/60 + "\n" +
                       "dehumidifier: " + d.dehumid/60+ "\n" +
                       "leaf: " + d.leaf;
                   return  tooltip_string;
@@ -425,6 +453,21 @@
               .selectAll("rect")
               .attr("y", -6)
               .attr("height", this_brush_plot.height + 7);
+			  
+			var line = d3.svg.line()
+                .interpolate("basis")
+                .x(function(d) { return this_plot.x(d.date); })
+                .y(function(d) { return this_plot.y2(d.val); });
+			
+			for (var key in temperature_array){
+				if (temperature_array.hasOwnProperty(key)) {
+					 this_plot.svg_plot
+				      .append("path")
+					  .attr("class", "line")
+					  .attr("d", function(d){ return line(temperature_array[key]); })
+					  .style("stroke", line_colors.get_color(key));
+				}
+			}
               
           } //End fetchEnergy()
           )};
@@ -533,13 +576,13 @@
             this_plot.y.domain([
                 +d3.min(points, function(c) { if (c.name == "target" //|| (c.name == "target2" && c.values != null) 
                 || c.name == "current" || c.name == "outsideTemperature"
-                || c.name == "outsideHumidity" || c.name == "outsidePressure" 
+                || c.name == "outsidePressure" 
                 ) { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 1,
                 +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); }) + 1
             ]);
             this_plot.y2.domain([
-                +d3.min(points, function(c) { if (c.name == "humidity") { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 1,
-                +d3.max(points, function(c) { if (c.name == "humidity") { return d3.max(c.values, function(v) { return v.val }); } else { return undefined; } }) + 1 
+                +d3.min(points, function(c) { if (c.name == "humidity" || c.name == "outsideHumidity" ) { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 1,
+                +d3.max(points, function(c) { if (c.name == "humidity" || c.name == "outsideHumidity" ) { return d3.max(c.values, function(v) { return v.val }); } else { return undefined; } }) + 1 
             ]);
             
             //Setup the events plot axis
@@ -610,24 +653,21 @@
 
             
             //Create the line objects once
-            if (typeof this_plot.line === 'undefined') {
-              this_plot.line = d3.svg.line()
-                .interpolate("basis")
-                .x(function(d) { return this_plot.x(d.date); })
-                .y(function(d) { return this_plot.y(d.val); });
+			var line = d3.svg.line()
+				.interpolate("basis")
+				.x(function(d) { return this_plot.x(d.date); })
+				.y(function(d) { return this_plot.y(d.val); });
+			
+			var lineStepafter = d3.svg.line()
+				.interpolate("step-after")
+				.x(function(d) { return this_plot.x(d.date); })
+				.y(function(d) { return this_plot.y(d.val); });
+			
+			var lineRight = d3.svg.line()
+				  .interpolate("basis")
+				  .x(function(d) { return this_plot.x(d.date); })
+				  .y(function(d) { return this_plot.y2(d.val); });
 
-              this_plot.lineStepafter = d3.svg.line()
-                .interpolate("step-after")
-                .x(function(d) { return this_plot.x(d.date); })
-                .y(function(d) { return this_plot.y(d.val); });
-                
-              if(this_plot.hasRightAxis === true) {
-                this_plot.lineRight = d3.svg.line()
-                  .interpolate("basis")
-                  .x(function(d) { return this_plot.x(d.date); })
-                  .y(function(d) { return this_plot.y2(d.val); });
-              }
-            }
             
             //All events are step after (logical 0/1)
             if (typeof events_plot.lineStepafter === 'undefined') {
@@ -643,12 +683,12 @@
               .attr("class", "line")
               .attr("d", function(d) { 
                 if (d.name == "current" || d.name == "outsideTemperature"
-                || d.name == "outsideHumidity" || d.name == "outsidePressure" ) 
-                    return this_plot.line(d.values); 
-                else if (d.name == "humidity")
-                    return this_plot.lineRight(d.values); 
+                || d.name == "outsidePressure" ) 
+                    return line(d.values); 
+                else if (d.name == "humidity" || d.name == "outsideHumidity" )
+                    return lineRight(d.values); 
                 else
-                    return this_plot.lineStepafter(d.values); 
+                    return lineStepafter(d.values); 
               })
               .style("stroke", function(d) { 
                   return d.values[0].color; 
@@ -717,6 +757,51 @@
                  .text(d.name);
             
             });
+          });
+          };
+		  
+		  function fetchCycles (timeRange) {
+          var fetch_string;
+          if(typeof(timeRange) !== "undefined") {
+            fetch_string = "id=" + device_id + "&start=\"" + timeRange[0] + "\"&end=\"" + timeRange[1] + "\"" + "&data=cycles";
+          }
+          else {
+            fetch_string = "id=" + device_id + "&hrs=" + hours + "&data=cycles";
+          }
+		  
+          // fetch the data
+          //console.log(fetch_string);
+          d3.json("fetch.php?" + fetch_string, function(error, data) {
+            this_plot = graph_info.plot_info_arr[2];           
+                        
+            this_plot.svg_plot.selectAll(".plot").remove();
+            this_plot.svg_plot.selectAll(".x.axis").remove();
+            this_plot.svg_plot.selectAll(".y.axis").remove();
+            
+			var data_array = [];
+            				
+				
+            data.forEach(function(d) {
+                             
+				if(d.duration !== 0)
+				{
+					var start_date = parseDate(d.timestamp);
+					var start_timestamp = +start_date + (d.start * 1000);
+					var end_timestamp = start_timestamp + (d.duration * 1000);
+
+					data_array.push( { name: d.type,
+									color: line_colors.get_color(d.type),
+									start: new Date(start_timestamp),
+									end: new Date(end_timestamp)
+									} );
+				}
+              
+			  //Parse the date
+			  d.date = parseDate(d.timestamp);
+			  
+              
+            });
+
           });
           };
 
