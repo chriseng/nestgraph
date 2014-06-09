@@ -1,0 +1,3 @@
+[submodule "nest-api-master"]
+	path = nest-api-master
+	url = https://github.com/gboudreau/nest-api.git
