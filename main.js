@@ -1,15 +1,26 @@
 
  nestGraph = {
     'init': function() {
-            device_id = 1;
+            var device_id = 1;
 
             // change this if you want to limit the amount of data pulled
-            hours = 24 * 7;
+            var hours = 24 * 5;
             
+			var first_date = "2014-05-16 00:00:00";
+			
             var graph_info = {
                 fullWidth : window.innerWidth * 0.97,
                 
                 fullHeight : window.innerHeight * 0.95,
+				
+				get_plot_info_var : function(name){
+					var i;
+					for( i = 0; i < this.plot_info_arr.length; i += 1) {
+						if(this.plot_info_arr[i].name === name) {
+							return this.plot_info_arr[i];
+						}
+					}					
+				},
                 
                 plot_info_arr : [
                    {
@@ -27,15 +38,7 @@
                       margin : {top: 60, right: 60, bottom: 0, left: 50},
                       hasRightAxis : false
                       },
-                      
-                   {
-                      name : "Cycles",
-                      height : 40,
-                      width : window.innerWidth * 0.80,
-                      margin : {top: 60, right: 60, bottom: 0, left: 50},
-                      hasRightAxis : false
-                      },
-                      
+                                           
                    {
                       name : "Log Data",
                       height : window.innerWidth * 0.80 * .5,
@@ -47,6 +50,13 @@
                    {
                       name : "Events",
                       height : 400,
+                      width : window.innerWidth * 0.80,
+                      margin : {top: 60, right: 60, bottom: 0, left: 50},
+                      hasRightAxis : false
+                      },
+				   {
+                      name : "Cycles",
+                      height : 80,
                       width : window.innerWidth * 0.80,
                       margin : {top: 60, right: 60, bottom: 0, left: 50},
                       hasRightAxis : false
@@ -152,6 +162,10 @@
               }
           
           };
+		  
+		  String.prototype.capitalizeFirst = function() {
+				return this.charAt(0).toUpperCase() + this.slice(1);
+		  }
 
           graph_info.set_x_y_scale();
           
@@ -200,6 +214,7 @@
 				brush_update_in_progress = true;
 	            setTimeout(function() { 
 					fetchData(brush_domain_time); 
+					//fetchCycles(brush_domain_time);
 					brush_update_in_progress = false;}, 250);
 			}
             
@@ -250,8 +265,8 @@
           function fetchEnergy() {
           // fetch the data
           d3.json("fetch.php?id=" + device_id + "&hrs=" + hours + "&data=energy", function(error, data) {
-            this_plot = graph_info.plot_info_arr[0];
-            this_brush_plot = graph_info.plot_info_arr[1];
+            this_plot = graph_info.get_plot_info_var("Energy");;
+            this_brush_plot = graph_info.get_plot_info_var("Energy Brush");
             //console.log(data);
             
             var data_array = [];
@@ -298,22 +313,25 @@
               //Simply reload to get the appropriate values
               if(d.temperature_avg == null)
               {
-				var date_range = [];
-				var short_date_format = d3.time.format("%Y-%m-%d");
-           		date_range[0] = short_date_format(d.date);
-           		date_range[1] = short_date_format(new Date(+d.date + 86400000));
-                value_array = computeAverageTemp(date_range);
-				
-				if(value_array != undefined)
-				{
-					temperature_array.daily_temperature_average.push( { date: d.date,
-																		val: parseInt(value_array.temperature_avg)});
-					temperature_array.daily_temperature_max.push( { date: d.date,
-																		val: parseInt(value_array.temperature_max)});
-					temperature_array.daily_temperature_min.push( { date: d.date,
-                                                                    val: parseInt(value_array.temperature_min)});
-				}
-
+				  var earliest_date = parseDate(first_date);
+				  if(+d.date > +earliest_date)
+				  { 
+					var date_range = [];
+					var short_date_format = d3.time.format("%Y-%m-%d");
+					date_range[0] = short_date_format(d.date);
+					date_range[1] = short_date_format(new Date(+d.date + 86400000));
+					value_array = computeAverageTemp(date_range);
+					
+					if(value_array != undefined)
+					{
+						temperature_array.daily_temperature_average.push( { date: d.date,
+																			val: parseInt(value_array.temperature_avg)});
+						temperature_array.daily_temperature_max.push( { date: d.date,
+																			val: parseInt(value_array.temperature_max)});
+						temperature_array.daily_temperature_min.push( { date: d.date,
+																		val: parseInt(value_array.temperature_min)});
+					}
+				  }
               }
               else
               {
@@ -395,7 +413,7 @@
               .style("text-anchor", "end")
               .text("Duration (Minutes)");
               
-            // bind the energy data current/trendlines
+            // draw the energy data stacked histogram
             this_plot.svg_plot.selectAll(".plot.energies")
               .data(data_array.sort(function(a, b){return b.val-a.val})) //Sort the data so smaller rects are drawn over larger.
               .enter()
@@ -417,7 +435,7 @@
               .attr("class", function(d) { return "plot tooltips"})
               .attr("x", function(d) { return this_plot.x(d.date); })
               .attr("y", function(d) { return 0; })
-              .attr("width", function(d) { return (this_plot.width / data.length) - 1; }) // - 1 for paeeing
+              .attr("width", function(d) { return (this_plot.width / data.length) - 1; }) // - 1 for 1px padding
               .attr("height", function(d) { return this_plot.height; })
               .attr("fill-opacity", 0)
               .append("svg:title")
@@ -441,7 +459,7 @@
               .attr("class", function(d) { return "plot duration"})
               .attr("x", function(d) { return this_brush_plot.x(d.date); })
               .attr("y", function(d) { return this_brush_plot.y(d.val); })
-              .attr("width", function(d) { return (this_brush_plot.width / data.length) - 1; }) // - 1 for paeeing
+              .attr("width", function(d) { return (this_brush_plot.width / data.length) - 1; }) // - 1 for 1px padding
               .attr("height", function(d) { return this_brush_plot.height - this_brush_plot.y(d.val); })
               .attr("fill", function(d) { return d.color; })
               .attr("fill-opacity", 1);
@@ -483,8 +501,8 @@
           // fetch the data
           //console.log(fetch_string);
           d3.json("fetch.php?" + fetch_string, function(error, data) {
-            this_plot = graph_info.plot_info_arr[3];
-            events_plot = graph_info.plot_info_arr[4];
+            this_plot = graph_info.get_plot_info_var("Log Data");
+            events_plot = graph_info.get_plot_info_var("Events");
             
                         
             this_plot.svg_plot.selectAll(".plot").remove();
@@ -689,10 +707,11 @@
                     return lineRight(d.values); 
                 else
                     return lineStepafter(d.values); 
-              })
+              	})
               .style("stroke", function(d) { 
                   return d.values[0].color; 
-              });
+             	 })
+			  .style('pointer-events', 'none');
               //.attr("clip-path", "url(#clip)");
               
             // draw events plots
@@ -701,10 +720,11 @@
               .attr("class", "line")
               .attr("d", function(d) { 
                     return events_plot.lineStepafter(d.values); 
-              })
+              	})
               .style("stroke", function(d) {  
                   return d.values[0].color; 
-              });
+              	})
+			  .style('pointer-events', 'none');
 
             // create a parent element for the circles to live
             this_plot.svg_plot.selectAll(".current")
@@ -757,10 +777,41 @@
                  .text(d.name);
             
             });
+			
+			//Add a mouseover event that draws a line and updates the values at this location
+			/*
+			var marker = this_plot.svg_plot.append('g')
+   			  .attr("class", "mouse circles")
+			  .append("circle")
+			  .attr('r', 20)
+			  .style('display', 'none')
+			  .style('fill', '#000000')
+			  .style('pointer-events', 'none')
+			  .style('stroke', '#FB5050')
+			  .style('stroke-width', '3px');
+  
+			this_plot.svg_plot
+			.on('mouseover', function() {
+				  marker.style('display', 'inherit');
+				})
+			.on('mouseout', function() {
+				  marker.style('display', 'none');
+				})
+			.on('mousemove', function() {
+   				  var mouse = d3.mouse(this);
+				  marker
+				  	.attr('cx', mouse[0])
+				  	.attr('cy', mouse[1]);
+			});
+			*/
+			
+			
+			//End for data
+			fetchCycles (timeRange, x_domain);
           });
           };
 		  
-		  function fetchCycles (timeRange) {
+		  function fetchCycles (timeRange, domain) {
           var fetch_string;
           if(typeof(timeRange) !== "undefined") {
             fetch_string = "id=" + device_id + "&start=\"" + timeRange[0] + "\"&end=\"" + timeRange[1] + "\"" + "&data=cycles";
@@ -772,14 +823,19 @@
           // fetch the data
           //console.log(fetch_string);
           d3.json("fetch.php?" + fetch_string, function(error, data) {
-            this_plot = graph_info.plot_info_arr[2];           
+            this_plot = graph_info.get_plot_info_var("Cycles");           
                         
             this_plot.svg_plot.selectAll(".plot").remove();
             this_plot.svg_plot.selectAll(".x.axis").remove();
             this_plot.svg_plot.selectAll(".y.axis").remove();
             
 			var data_array = [];
-            				
+            var cycle_type_to_string = {
+				1 : "heating",
+				65792 : "cooling",
+				65536 : "fan",
+				81921 : "humidity"
+				}
 				
             data.forEach(function(d) {
                              
@@ -789,24 +845,88 @@
 					var start_timestamp = +start_date + (d.start * 1000);
 					var end_timestamp = start_timestamp + (d.duration * 1000);
 
-					data_array.push( { name: d.type,
-									color: line_colors.get_color(d.type),
-									start: new Date(start_timestamp),
-									end: new Date(end_timestamp)
+					data_array.push( { type: d.type,
+										name: cycle_type_to_string[d.type],
+										color: line_colors.get_color(cycle_type_to_string[d.type]),
+										start: new Date(start_timestamp),
+										end: new Date(end_timestamp),
+										duration: d.duration
 									} );
 				}
               
 			  //Parse the date
-			  d.date = parseDate(d.timestamp);
-			  
-              
+			  d.date = parseDate(d.timestamp);             
             });
+
+			// define the x-domains (i.e. min and max of actual date values)
+			//if(domain == "undefined")
+			//{
+				var date_domain = d3.extent(data, function(d) { return d.date; });
+				//console.log (date_domain);
+				date_domain[1] = new Date(+date_domain[1] + 86400000); //add an extra day
+				this_plot.x.domain(date_domain);
+			//}
+			//else
+			//{
+			//	this_plot.x.domain(domain);
+			//}
+			
+			
+			//match the x-domain to the events plot so they line up nicely.
+			//var events_plot = graph_info.get_plot_info_var("Events");
+			//var events_x_domain = events_plot.x.domain();
+			//this_plot.x.domain(events_x_domain);
+            
+            // define the y-domains (i.e. min and max of the union of all the trendlines)
+            var y_domain = [0, 1]; // This can be fixed since we're only drawing events in time
+            this_plot.y.domain(y_domain);
+			
+       
+            // draw nest_data_plot x axis
+            this_plot.svg_plot.append("g")
+              .attr("class", "x axis nest_data_plot")
+              .attr("transform", "translate(0," + this_plot.height + ")")
+              .call(this_plot.xAxis);
+
+            // draw nest_data_plot y axis
+			/*
+            this_plot.svg_plot.append("g")
+              .attr("class", "y axis nest_data_plot")
+              .call(this_plot.yAxis)
+              .append("text")
+              .attr("transform", "rotate(-90)")
+              .attr("y", 6)
+              .attr("dy", ".71em")
+              .style("text-anchor", "end")
+              .text("Duration (Minutes)");*/
+			  
+			  this_plot.svg_plot.selectAll(".plot.energies")
+				  .data(data_array.sort(function(a, b){return b.type-a.type}))
+				  .enter()
+				  .append("rect")
+				  .attr("class", function(d) { return "plot cycles"})
+				  .attr("x", function(d) { return this_plot.x(d.start); })
+				  .attr("y", function(d) { return 0; })
+				  .attr("width", function(d) { return (this_plot.x(d.end) - this_plot.x(d.start) ); })
+				  .attr("height", function(d) { return this_plot.height; })
+				  .attr("fill", function(d) { return d.color; })
+				  .attr("fill-opacity", .8)
+				  .append("svg:title")
+				  .text(function(d) {
+					  var tooltip_string = d.name.capitalizeFirst() + ":\n" + 
+						  "Start: " + d.start + "\n" +
+						  "End: " + d.end + "\n" +
+						  //fan doesn't ever seem to have non-zero values
+						  "Duration: " + d.duration/60 + "Minutes \n";
+					  return  tooltip_string;
+				  });
 
           });
           };
 
           fetchEnergy();
           fetchData();
+		  //fetchCycles();
           
             
           window.onload=function(){

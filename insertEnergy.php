@@ -58,6 +58,11 @@ try {
             $stmt->bind_param("isiiiiiiiiii", $row[0],  $day->day, $day->device_timezone_offset, $day->total_heating_time, $day->total_cooling_time, $day->total_fan_cooling_time, $day->total_humidifier_time, $day->total_dehumidifier_time, $day->leafs, $day->whodunit, $day->recent_avg_used, $day->usage_over_avg);
             $stmt->execute();      
             $stmt->close();
+            
+            //Envoke the function to actually generate the daily averages so that 
+            // we don't need to do it as part of the loading of the webpage
+            //Add " around the date so sql parses properly
+            print compute_daily_temps($db, '"'.$day->day.'"', $row[0]) . "\n";
           }
         }
       }
