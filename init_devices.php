@@ -4,11 +4,9 @@ require 'inc/config.php';
 require 'inc/class.db.php';
 require 'nest-api-master/nest.class.php';
 
-define('USERNAME', $config['nest_user']);
-define('PASSWORD', $config['nest_pass']);
 date_default_timezone_set($config['local_tz']);
 
-$nest = new Nest();
+$nest = new Nest($config['nest_user'], $config['nest_pass']);
 try {
 $db = new DB($config);
 $devices= $nest->getDevices();
