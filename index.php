@@ -37,6 +37,7 @@ try {
 <select id="device_id">
 <?php echo $options;?>
 </select>
+<input name="hours" type="text" id="hours"/> hours
 <script src="main.js" charset="utf-8"></script>
 </body>
 </html>

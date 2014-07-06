@@ -340,4 +340,16 @@ window.onload=function(){
 	  brushUpdate();
 	}
   }
+  document.getElementById("hours").onkeypress=
+  function (e) {
+        var key=e.keyCode || e.which;
+	if (key==13){
+           window.hours = document.getElementById("hours").value;
+	   clearData();
+	   fetchData();
+	   if (!brush.empty()) {
+	     brushUpdate();
+	   }
+	}   
+  }	
 }
