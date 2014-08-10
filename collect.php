@@ -3,13 +3,11 @@
 require 'inc/config.php';
 require 'nest-api-master/nest.class.php';
 
-define('USERNAME', $config['nest_user']);
-define('PASSWORD', $config['nest_pass']);
-
 date_default_timezone_set($config['local_tz']);
 
 function get_nest_data($serial_number=null) {
-  $nest = new Nest();
+  global $config;
+  $nest = new Nest($config['nest_user'], $config['nest_pass']);
   $info = $nest->getDeviceInfo($serial_number);
   
   if (preg_match("/away/", $info->current_state->mode) || preg_match("/range/", $info->current_state->mode)) {

@@ -940,8 +940,10 @@
             if (!brush.empty()) {
               brushUpdate();
             }
-            }
+            };
+			
           };
+
     }
 };
 

@@ -4,16 +4,13 @@ require 'inc/config.php';
 require 'nest-api-master/nest.class.php';
 
 
-define('USERNAME', $config['nest_user']);
-define('PASSWORD', $config['nest_pass']);
-
 date_default_timezone_set($config['local_tz']);
 
 function get_nest_data($serial_number=null) {
-  $nest = new Nest();
-  $info = $nest->getDeviceInfo($serial_number);
+  global $config;
+  $nest = new Nest($config['nest_user'], $config['nest_pass']);
+  //$info = $nest->getDeviceInfo($serial_number);
   $energy = $nest->getEnergyLatest($serial_number);
-  
   //Change nulls to 0
   foreach($energy->objects as &$object)
   {
@@ -42,26 +39,32 @@ function get_nest_data($serial_number=null) {
         {
           $events -> touched_where = 0;
         }
+        
         if ( empty($events -> heat_temp) )
         {
           $events -> heat_temp = 0;
         }
-        if ( empty($events -> heat_temp) )
+        else
         {
-          $events -> heat_temp = 0;
+          $events -> heat_temp = $nest->temperatureInUserScale($events -> heat_temp);
         }
+        
         if ( empty($events -> cool_temp) )
         {
           $events -> cool_temp = 0;
         }
+        else
+        {
+          $events -> cool_temp = $nest->temperatureInUserScale($events -> cool_temp);
+        }
+
       }
       unset($events);
     }
     unset($day);
   }
   unset($object);
-  
-  return $energy;  
+  return $energy;
 }
 
 function compute_daily_temps(&$db, $time_start, $id)
@@ -124,9 +127,4 @@ function compute_daily_temps(&$db, $time_start, $id)
     }
     return "";
 }
-
-function c_to_f($c) {
-  return ($c * 1.8) + 32;
-}
-
 ?>
