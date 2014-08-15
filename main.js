@@ -359,10 +359,10 @@
             this_plot.y.domain(y_domain);
             this_brush_plot.y.domain(y_domain);
 			
-			var y_temperature_domain = [-50, //d3.min(temperature_array.daily_temperature_min, function(d) { return d.val;} ), 
+			var y_temperature_domain = [-10, //d3.min(temperature_array.daily_temperature_min, function(d) { return d.val;} ), 
 										d3.max(temperature_array.daily_temperature_max, function(d) { return d.val;} ) ];
-			y_temperature_domain[0] -=	y_temperature_domain[0]*.1;
-			y_temperature_domain[1] +=	y_temperature_domain[1]*.1;	
+			y_temperature_domain[0] -=	y_temperature_domain[0]*.05;
+			y_temperature_domain[1] +=	y_temperature_domain[1]*.05;	
 			this_plot.y2.domain(y_temperature_domain);	
             
             
