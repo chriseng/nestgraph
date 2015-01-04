@@ -52,11 +52,18 @@
 
                    {
                       name : "Log Data",
-                      height : window.innerWidth * 0.80 * .5,
+                      height : window.innerWidth * 0.80 * .15,
                       width : window.innerWidth * 0.80,
                       margin : {top: 60, right: 60, bottom: 0, left: 50},
-                      hasRightAxis : true
+                      hasRightAxis : false
                       },
+                   {
+                         name : "Humidity Data",
+                         height : window.innerWidth * 0.80 * .15,
+                         width : window.innerWidth * 0.80,
+                         margin : {top: 60, right: 60, bottom: 0, left: 50},
+                         hasRightAxis : true
+                         },
 
                    {
                       name : "Events",
@@ -390,8 +397,10 @@
               .attr("class", "y axis nest_data_plot")
               .call(this_plot.yAxis)
               .append("text")
-              .attr("transform", "rotate(-90)")
-              .attr("y", 6)
+//              .attr("transform", "rotate(-90)")
+//              .attr("y", 6)
+              .attr("y", -23)
+              .attr("x", 50)
               .attr("dy", ".71em")
               .style("text-anchor", "end")
               .text("Duration (Minutes)");
@@ -402,8 +411,9 @@
               .attr("transform", "translate(" + (this_plot.width+15) + ",0)")
               .call(this_plot.yRightAxis)
               .append("text")
-              .attr("transform", "rotate(-90)")
-              .attr("y", -12)
+              //.attr("transform", "rotate(-90)")
+              .attr("y", -23)
+              .attr("x", 50)
               .attr("dy", ".71em")
               .style("text-anchor", "end")
               .text("Temperature (degrees C)");
@@ -419,8 +429,9 @@
               .attr("class", "y axis brush")
               .call(this_brush_plot.yAxis)
               .append("text")
-              .attr("transform", "rotate(-90)")
-              .attr("y", 6)
+            //  .attr("transform", "rotate(-90)")
+              .attr("y", -23)
+              .attr("x", 50)
               .attr("dy", ".71em")
               .style("text-anchor", "end")
               .text("Duration (Minutes)");
@@ -514,6 +525,7 @@
           //console.log(fetch_string);
           d3.json("fetch.php?" + fetch_string, function(error, data) {
             this_plot = graph_info.get_plot_info_var("Log Data");
+            humid_plot = graph_info.get_plot_info_var("Humidity Data");
             events_plot = graph_info.get_plot_info_var("Events");
 
 
@@ -521,6 +533,10 @@
             this_plot.svg_plot.selectAll(".x.axis").remove();
             this_plot.svg_plot.selectAll(".y.axis").remove();
             svg.selectAll(".legend").remove();
+
+            humid_plot.svg_plot.selectAll(".plot").remove();
+            humid_plot.svg_plot.selectAll(".x.axis").remove();
+            humid_plot.svg_plot.selectAll(".y.axis").remove();
 
             events_plot.svg_plot.selectAll(".plot").remove();
             events_plot.svg_plot.selectAll(".x.axis").remove();
@@ -601,6 +617,7 @@
             // define the x-domains (i.e. min and max of actual date values)
             var x_domain = d3.extent(data, function(d) { return d.date; });
             this_plot.x.domain(x_domain);
+            humid_plot.x.domain(x_domain);
 
             // define the y-domains (i.e. min and max of the union of all the trendlines)
             this_plot.y.domain([
@@ -611,10 +628,17 @@
                 || c.name == "current" || c.name == "outsideTemperature"
                 ) { return d3.max(c.values, function(v) { return v.val }); } else { return undefined; } }) + 1
             ]);
-            this_plot.y2.domain([
-                +d3.min(points, function(c) { if (c.name == "humidity" || c.name == "outsideHumidity" || c.name == "outsidePressure" ) { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 1,
-                +d3.max(points, function(c) { if (c.name == "humidity" || c.name == "outsideHumidity" || c.name == "outsidePressure" ) { return d3.max(c.values, function(v) { return v.val }); } else { return undefined; } }) + 1
+
+            humid_plot.y.domain([
+                +d3.min(points, function(c) { if (c.name == "outsidePressure"
+                ) { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 1,
+                +d3.max(points,  function(c) { if (c.name == "outsidePressure"
+                ) { return d3.max(c.values, function(v) { return v.val }); } else { return undefined; } }) + 1
             ]);
+            humid_plot.y2.domain([0, 100]);
+//                +d3.min(points, function(c) { if (c.name == "humidity" || c.name == "outsideHumidity"  ) { return d3.min(c.values, function(v) { return v.val }); } else { return undefined; } }) - 1,
+//                +d3.max(points, function(c) { if (c.name == "humidity" || c.name == "outsideHumidity"  ) { return d3.max(c.values, function(v) { return v.val }); } else { return undefined; } }) + 1
+//            ]);
 
             //Setup the events plot axis
             events_plot.x.domain(x_domain);
@@ -631,22 +655,46 @@
               .attr("class", "y axis nest_data_plot")
               .call(this_plot.yAxis)
               .append("text")
-              .attr("transform", "rotate(-90)")
-              .attr("y", 6)
+//              .attr("transform", "rotate(-90)")
+              .attr("y", -23)
+              .attr("x", 0)
+//              .attr("y", 6)
               .attr("dy", ".71em")
-              .style("text-anchor", "end")
+              .style("text-anchor", "middle")
               .text("Temperature (C)");
 
-            this_plot.svg_plot.append("g")
+            // draw nest_data_plot x axis
+            humid_plot.svg_plot.append("g")
+              .attr("class", "x axis nest_data_plot")
+              .attr("transform", "translate(0," + humid_plot.height + ")")
+              .call(humid_plot.xAxis);
+
+            // draw nest_data_plot y axis
+            humid_plot.svg_plot.append("g")
               .attr("class", "y axis nest_data_plot")
-              .attr("transform", "translate(" + (this_plot.width+15) + ",0)")
-              .call(this_plot.yRightAxis)
+              .call(humid_plot.yAxis)
               .append("text")
-              .attr("transform", "rotate(-90)")
-              .attr("y", -12)
+//              .attr("transform", "rotate(-90)")
+//              .attr("y", 6)
+              .attr("y", -23)
+              .attr("x", 0)
               .attr("dy", ".71em")
-              .style("text-anchor", "end")
+              .style("text-anchor", "middle")
+              .text("Pressure (hPa)");
+
+            humid_plot.svg_plot.append("g")
+              .attr("class", "y axis nest_data_plot")
+              .attr("transform", "translate(" + (humid_plot.width+15) + ",0)")
+              .call(humid_plot.yRightAxis)
+              .append("text")
+//              .attr("transform", "rotate(-90)")
+//              .attr("y", -12)
+              .attr("y", -23)
+              .attr("x", 0)
+              .attr("dy", ".71em")
+              .style("text-anchor", "middle")
               .text("Humidity (%)");
+
 
             // draw events x axis
             events_plot.svg_plot.append("g")
@@ -659,17 +707,24 @@
               .attr("class", "y axis events")
               .call(events_plot.yAxis)
               .append("text")
-              .attr("transform", "rotate(-90)")
-              .attr("y", 6)
+              .attr("y", -23)
+              .attr("x", 0)
+//              .attr("transform", "rotate(-90)")
+//              .attr("y", 6)
               .attr("dy", ".71em")
-              .style("text-anchor", "end")
+              .style("text-anchor", "middle")
               .text("Event");
 
             // bind nest_data_plot current/trendlines
             this_plot.svg_plot.selectAll(".plot.temps")
               .data(points.filter(function(f) { return (f.name == 'current' || f.name == 'outsideTemperature'
-              || f.name == "outsideHumidity" || f.name == "outsidePressure"
-              || f.name == 'humidity' || f.name == 'target' || (f.name == 'target2' && f.values != null)  ); }))
+              || f.name == 'target' || (f.name == 'target2' && f.values != null)  ); }))
+              .enter().append("g")
+              .attr("class", function(d) { return "plot temps " + d.name; });
+
+            humid_plot.svg_plot.selectAll(".plot.temps")
+              .data(points.filter(function(f) { return ( f.name == "outsideHumidity" || f.name == "outsidePressure"
+              || f.name == 'humidity'  ); }))
               .enter().append("g")
               .attr("class", function(d) { return "plot temps " + d.name; });
 
@@ -700,6 +755,22 @@
 				  .y(function(d) { return this_plot.y2(d.val); });
 
 
+  			var lineH = d3.svg.line()
+  				.interpolate("basis")
+  				.x(function(d) { return humid_plot.x(d.date); })
+  				.y(function(d) { return humid_plot.y(d.val); });
+
+  			var lineStepafterH = d3.svg.line()
+  				.interpolate("step-after")
+  				.x(function(d) { return humid_plot.x(d.date); })
+  				.y(function(d) { return humid_plot.y(d.val); });
+
+  			var lineRightH = d3.svg.line()
+  				  .interpolate("basis")
+  				  .x(function(d) { return humid_plot.x(d.date); })
+  				  .y(function(d) { return humid_plot.y2(d.val); });
+
+
             //All events are step after (logical 0/1)
             if (typeof events_plot.lineStepafter === 'undefined') {
               events_plot.lineStepafter = d3.svg.line()
@@ -720,6 +791,24 @@
                     return lineRight(d.values);
                 else
                     return lineStepafter(d.values);
+              	})
+              .style("stroke", function(d) {
+                  return d.values[0].color;
+             	 })
+			  .style('pointer-events', 'none');
+              //.attr("clip-path", "url(#clip)");
+
+            humid_plot.svg_plot.selectAll(".plot")
+              .append("path")
+              .attr("class", "line")
+              .attr("d", function(d) {
+                if (d.name == "outsidePressure"
+                 )
+                    return lineH(d.values);
+                else if (d.name == "humidity" || d.name == "outsideHumidity" )
+                    return lineRightH(d.values);
+                else
+                    return lineStepafterH(d.values);
               	})
               .style("stroke", function(d) {
                   return d.values[0].color;
