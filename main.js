@@ -1035,7 +1035,7 @@
             document.getElementById("device_id").onchange=
             function () {
                    aList = document.getElementById("device_id");
-                  window.device_id = aList.options[aList.selectedIndex].value;
+                  device_id = aList.options[aList.selectedIndex].value;
             graph_info.clearData();
             fetchEnergy();
             fetchData();
