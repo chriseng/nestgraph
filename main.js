@@ -846,7 +846,7 @@
               .attr("fill", function(d) { return (d.mode); })
               .attr("opacity", 0.2)
               .append("svg:title").text(function(d) {
-                return format(d.date) + "\n" + d.val + "\u00B0 F";
+                return format(d.date) + "\n" + d.val + "\u00B0C";
               });
 
             // draw legend
