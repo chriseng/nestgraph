@@ -4,7 +4,7 @@
             var device_id = 1;
 
             // change this if you want to limit the amount of data pulled
-            var hours = 24 * 30;
+            var hours = 24 * 5;
 
 			var first_date = "2014-05-16 00:00:00";
 
@@ -52,7 +52,7 @@
 
                    {
                       name : "Log Data",
-                      height : window.innerWidth * 0.80 * .15,
+                      height : window.innerWidth * 0.80 * .2,
                       width : window.innerWidth * 0.80,
                       margin : {top: 60, right: 60, bottom: 0, left: 50},
                       hasRightAxis : false
@@ -416,7 +416,7 @@
               .attr("x", 50)
               .attr("dy", ".71em")
               .style("text-anchor", "end")
-              .text("Temperature (degrees C)");
+              .text("Temperature (" + temperature_units + ")");
 
             // draw the brush plot x-axis
             this_brush_plot.svg_plot.append("g")
@@ -661,7 +661,7 @@
 //              .attr("y", 6)
               .attr("dy", ".71em")
               .style("text-anchor", "middle")
-              .text("Temperature (C)");
+              .text("Temperature (" + temperature_units + ")");
 
             // draw nest_data_plot x axis
             humid_plot.svg_plot.append("g")
@@ -846,7 +846,7 @@
               .attr("fill", function(d) { return (d.mode); })
               .attr("opacity", 0.2)
               .append("svg:title").text(function(d) {
-                return format(d.date) + "\n" + d.val + "\u00B0C";
+                return format(d.date) + "\n" + d.val + "\u00B0 " + temperature_units;
               });
 
             // draw legend

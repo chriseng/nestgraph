@@ -7,7 +7,8 @@ $config = array('db_ip' => '127.0.0.1',
 		'nest_user' => 'your_nest_username',
 		'nest_pass' => 'your_nest_password',
 		'local_tz' => 'America/New_York', // see http://php.net/manual/en/timezones.php
-		'local_woeid' => '2459115' // Where On Earth ID for Yahoo! Weather (Search woeid lookup to convert zip/city, etc)
+		'local_woeid' => '2459115', // Where On Earth ID for Yahoo! Weather (Search woeid lookup to convert zip/city, etc)
+		'temperature_units' => 'F' //The units for temperature either 'C' or 'F'
 		);
 
 ?>

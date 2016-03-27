@@ -18,6 +18,8 @@ if (!empty($_GET["id"])) {
   $id = $_GET["id"];
 }
 
+$temperature_units = $config['temperature_units'];
+
 try {
   $db = new DB($config);
   if ($stmt = $db->res->prepare("SELECT id,name from devices")) {
@@ -38,6 +40,9 @@ try {
 <select id="device_id">
 <?php echo $options;?>
 </select>
+<script>
+  var temperature_units = '<?php echo $temperature_units;?>';
+</script>
 <script src="main.js" charset="utf-8"></script>
 </body>
 </html>

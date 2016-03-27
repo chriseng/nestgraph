@@ -7,11 +7,13 @@ require 'yahoo-api-master/YahooWeather.class.php';
 
 try {
   $db = new DB($config);
-
-  $yahoo = new YahooWeather((int)$config["local_woeid"], 'c');
-  $temperature = sprintf("%.02f", $yahoo->getTemperature(false));
-  $humid = sprintf("%.02f", $yahoo->getHumidity(false));
-  $pressure = sprintf("%.02f", $yahoo->getPressure(false));
+  $temperature_units = strtolower($config['temperature_units']);
+  
+  //Yahoo now needs Oauth1 to get weather... fix later.
+  //$yahoo = new YahooWeather((int)$config["local_woeid"], $temperature_units);
+  $temperature = 0; //sprintf("%.02f", $yahoo->getTemperature(false));
+  $humid = 0; //sprintf("%.02f", $yahoo->getHumidity(false));
+  $pressure = 0; //sprintf("%.02f", $yahoo->getPressure(false));
   //echo "Temperature:" . $temperature . "\n";
 
 
