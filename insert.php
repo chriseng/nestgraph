@@ -8,26 +8,26 @@ require 'yahoo-api-master/YahooWeather.class.php';
 try {
   $db = new DB($config);
 
-  $yahoo = new YahooWeather((int)$config["local_woeid"]);
+  $yahoo = new YahooWeather((int)$config["local_woeid"], 'c');
   $temperature = sprintf("%.02f", $yahoo->getTemperature(false));
   $humid = sprintf("%.02f", $yahoo->getHumidity(false));
   $pressure = sprintf("%.02f", $yahoo->getPressure(false));
   //echo "Temperature:" . $temperature . "\n";
-  
-  
+
+
   if ($result = $db->res->query("SELECT id, serial FROM devices")) {
     while ($row = mysqli_fetch_row($result)) {
       $data = get_nest_data($row[1]);
       //print_r($data);
-      
-      if (!empty($data['timestamp'])) 
+
+      if (!empty($data['timestamp']))
       {
         if ($stmt = $db->res->prepare("REPLACE INTO data (device_id, timestamp, heating, cooling, fan, autoAway, manualAway, leaf, target, target2, current, humidity, outsideTemperature,outsideHumidity,outsidePressure, updated) " .
-                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())")) 
+                                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())"))
         {
-          $stmt->bind_param("isiiiiiidddiiii", $row[0], $data['timestamp'], $data['heating'], $data['cooling'], $data['fan'], $data['autoAway'], $data['manualAway'], $data['leaf'], 
+          $stmt->bind_param("isiiiiiidddiiii", $row[0], $data['timestamp'], $data['heating'], $data['cooling'], $data['fan'], $data['autoAway'], $data['manualAway'], $data['leaf'],
                           $data['target_temp'], $data['target_temp2'],  $data['current_temp'], $data['humidity'],$temperature, $humid, $pressure);
-          if (!$stmt->execute()) 
+          if (!$stmt->execute())
           {
             echo "Execute failed: (" . $stmt->errno . ") " . $stmt->error;
           }
