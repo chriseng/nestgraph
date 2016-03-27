@@ -10,10 +10,10 @@ try {
   $temperature_units = strtolower($config['temperature_units']);
   
   //Yahoo now needs Oauth1 to get weather... fix later.
-  //$yahoo = new YahooWeather((int)$config["local_woeid"], $temperature_units);
-  $temperature = 0; //sprintf("%.02f", $yahoo->getTemperature(false));
-  $humid = 0; //sprintf("%.02f", $yahoo->getHumidity(false));
-  $pressure = 0; //sprintf("%.02f", $yahoo->getPressure(false));
+  $yahoo = new YahooWeather($config['yh_consumerKey'], $config['yh_consumerKeySecret'], $config['yh_applicationId'], (int)$config["local_woeid"], $temperature_units);
+  $temperature = sprintf("%.02f", $yahoo->getTemperature(false));
+  $humid = sprintf("%.02f", $yahoo->getHumidity(false));
+  $pressure = sprintf("%.02f", $yahoo->getPressure(false));
   //echo "Temperature:" . $temperature . "\n";
 
 
