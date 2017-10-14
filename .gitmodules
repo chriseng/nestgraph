@@ -1,0 +1,6 @@
+[submodule "nest-api-master"]
+	path = nest-api-master
+	url = https://github.com/gboudreau/nest-api.git
+[submodule "yahoo-api-master"]
+	path = yahoo-api-master
+	url = https://github.com/mycon/Yahoo-Weather-API-PHP-class.git

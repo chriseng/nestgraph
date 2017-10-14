@@ -20,12 +20,14 @@ I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Docu
 * Lower mini-chart is interactive pan-and-zoom of the upper chart
 * Hover over the gray circles to get the exact timestamp and temperature
 
-![nestgraph screenshot](https://github.com/chriseng/nestgraph/raw/master/nestgraph-screenshot.png)
+![nestgraph screenshot](https://github.com/mycon/nestgraph/raw/master/nestgraph-screenshot.png)
 
 ## Dependencies
 
 * LAMP stack
 * Unofficial [nest-api](https://github.com/gboudreau/nest-api) library by Guillaume Boudreau
+* Yahoo Weather API (https://github.com/phront/Yahoo-Weather-API-PHP-class.git yahoo-api-master)
+* D3 Js Library (https://www.d3js.org)
 
 ## Getting Started
 
@@ -33,19 +35,29 @@ Clone this repo into your web root.
 
 ```bash
 cd [your-web-root]
-git clone https://github.com/chriseng/nestgraph.git
+git clone https://github.com/mycon/nestgraph.git
 ```
 
-Grab a copy of nest-api and unzip into the ```nestgraph``` directory you created in the previous step. It should create a subdirectory called ```nest-api-master```.
+Initialize git submodules `nest-api-master` and `yahoo-api-master`:
 
 ```bash
 cd nestgraph
-wget https://github.com/gboudreau/nest-api/archive/master.zip
-unzip master.zip
-rm -f master.zip
+git submodule init
+git submodule update
 ```
-Open ```inc/config.php``` in a text editor and update the ```nest_user``` and ```nest_pass``` variables with your username and password for nest.com.  Update the ```local_tz``` variable to reflect your time zone.
 
+Grab the minified v3 version of d3js from https://d3js.org/d3.v3.min.js and place it into:
+
+```
+[your-web-root]/nestgraph/d3.min.js
+```
+
+Open `inc/config.php` in a text editor and update:
+
+* `nest_user` and `nest_pass` variables with your username and password for nest.com
+* `local_tz` variable to reflect your time zone.
+* `local_woeid` with the code you find for your local address or city from: http://woeid.rosselliot.co.nz/
+ 
 Run the test script to make sure that the API is able to pull your thermostat data correctly from nest.com.
 
 ```bash
@@ -70,21 +82,25 @@ As root or using a DBA account, run the commands in dbsetup to create the MySQL 
 mysql -u root < dbsetup
 ```
 
-Create a cron job to poll the website periodically and update the local database. The thermostat does not phone home on a fixed schedule, but typically it updates in 5 to 30 minute intervals. The script will only insert into the database if there is new data available. Obviously, update the path to ```insert.php``` if it's not in ```/var/www/html/nestgraph```.
+Add your nests to the database.
+
+```bash
+php init_devices.php
+```
+
+Create a cron job to poll the website periodically and update the local database. The thermostat does not phone home on a fixed schedule, but typically it updates in 5 to 30 minute intervals. The script will only insert into the database if there is new data available. Obviously, update the path to ```insert.php``` if it's not in ```/var/www/html/nestgraph```. Additionally, add an entry for the job that polls energy usage and weather data daily.
 
 ```bash
 */5 * * * *     /bin/rm -f /tmp/nest_php_* ; /usr/bin/php /var/www/html/nestgraph/insert.php > /dev/null
+2 9 * * * /bin/rm -f /tmp/nest_php_* ; /usr/bin/php /var/www/html/nestgraph/insertEnergy.php > /dev/null
 ```
 (FYI, the reason we remove the files in ```/tmp``` is because it seems the nest-api library attempts to cache authentication info too aggressively, and after a few days it ends up trying to connect to an AWS server that no longer exists.)
 
-Point web browser to the ```nestgraph``` directory on your webserver!  Admire pretty graphs (actually, they won't be all that pretty until it has collected some data).
+Point web browser to the ```nestgraph/index.php``` directory on your webserver!  Admire pretty graphs (actually, they won't be all that pretty until it has collected some data).
 
 
 ## Known Issues
 
-* Only checks for heating on/off, not cooling (I don't have cooling)
-* Only supports a single Nest thermostat (I only have one)
-* Heating on/off trendline lazily mapped on to the temperature graph
 * Assumes you want temperatures displayed in Fahrenheit
 * Doesn't automatically redraw when you resize the browser window
 * Labels (current/target/heating) don't follow the trend lines when you pan/zoom
