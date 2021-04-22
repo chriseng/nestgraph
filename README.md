@@ -46,7 +46,9 @@ rm -f master.zip
 ```
 Open ```inc/config.php``` in a text editor and update the ```nest_user``` and ```nest_pass``` variables with your username and password for nest.com.  Update the ```local_tz``` variable to reflect your time zone.
 
-Run the test script to make sure that the API is able to pull your thermostat data correctly from nest.com.
+As of January 2020, the nest-api library is unable to authenticate directly to the Google Nest API. So instead you have to copy/paste in a session credential which will be cached and used until it expires. At which point you have to do it again. Run the ```nest-api-php-workaround-login.php``` script (copied into this repo from its [original location](https://gist.github.com/gboudreau/8b8851a9c99140b6234856bbc80a2d24)), and follow the instructions.
+
+Once you've done that, run the test script to make sure that the API is able to pull your thermostat data correctly from nest.com.
 
 ```bash
 php test.php
@@ -73,10 +75,7 @@ mysql -u root < dbsetup
 Create a cron job to poll the website periodically and update the local database. The thermostat does not phone home on a fixed schedule, but typically it updates in 5 to 30 minute intervals. The script will only insert into the database if there is new data available. Obviously, update the path to ```insert.php``` if it's not in ```/var/www/html/nestgraph```.
 
 ```bash
-*/5 * * * *     /bin/rm -f /tmp/nest_php_* ; /usr/bin/php /var/www/html/nestgraph/insert.php > /dev/null
-```
-(FYI, the reason we remove the files in ```/tmp``` is because it seems the nest-api library attempts to cache authentication info too aggressively, and after a few days it ends up trying to connect to an AWS server that no longer exists.)
-
+*/5 * * * *     /usr/bin/php /var/www/html/nestgraph/insert.php > /dev/null
 Point web browser to the ```nestgraph``` directory on your webserver!  Admire pretty graphs (actually, they won't be all that pretty until it has collected some data).
 
 
@@ -88,5 +87,5 @@ Point web browser to the ```nestgraph``` directory on your webserver!  Admire pr
 * Assumes you want temperatures displayed in Fahrenheit
 * Doesn't automatically redraw when you resize the browser window
 * Labels (current/target/heating) don't follow the trend lines when you pan/zoom
-* Need to figure out what's actually wrong with the authentication caching in ```nest-api``` instead of just purging its files in ```/tmp```
+* Have to manually update session credential each time it expires due to [Jan 2020 login changes](https://github.com/gboudreau/nest-api/issues/110)
 
