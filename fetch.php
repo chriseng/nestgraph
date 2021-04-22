@@ -6,7 +6,7 @@ require 'inc/class.db.php';
 define('DEFAULT_HRS', 72);
 
 $hrs = DEFAULT_HRS; 
-if ($_GET["hrs"]) {
+if (array_key_exists("hrs", $_GET)) {
   $hrs = $_GET["hrs"];
 }
 
