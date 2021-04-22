@@ -78,6 +78,12 @@ Create a cron job to poll the website periodically and update the local database
 */5 * * * *     /usr/bin/php /var/www/html/nestgraph/insert.php > /dev/null
 ```
 
+Optionally, create a cron job to check periodically if your cached session credential is still valid and if your thermostat has gone offline. I have mine run every 30 minutes; adjust as appropriate. Populate the recipient email(s) in ```check_nest.sh``` if you want email notifications, then add the crontab entry, again updating the below to use the appropriate execution path for your system.
+
+```bash
+*/30 * * * *    /var/www/html/nestgraph/check_nest.sh
+```
+
 Point web browser to the ```nestgraph``` directory on your webserver!  Admire pretty graphs (actually, they won't be all that pretty until it has collected some data).
 
 
