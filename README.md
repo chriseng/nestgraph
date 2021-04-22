@@ -76,6 +76,8 @@ Create a cron job to poll the website periodically and update the local database
 
 ```bash
 */5 * * * *     /usr/bin/php /var/www/html/nestgraph/insert.php > /dev/null
+```
+
 Point web browser to the ```nestgraph``` directory on your webserver!  Admire pretty graphs (actually, they won't be all that pretty until it has collected some data).
 
 
