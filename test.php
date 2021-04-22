@@ -23,11 +23,7 @@ function stuff_we_care_about($info) {
   echo "Timestamp           : ";
   printf("%s\n", $info->network->last_connection);
   echo "Target temperature  : ";
-  if (preg_match("/away/", $info->current_state->mode)) {
-    printf("%.02f\n", $info->target->temperature[0]);
-  } else {
-    printf("%.02f\n", $info->target->temperature);
-  }
+  printf("%.02f\n", $info->target->temperature);
   echo "Current temperature : ";
   printf("%.02f\n", $info->current_state->temperature);
   echo "Current humidity    : ";
