@@ -48,6 +48,10 @@ Open ```inc/config.php``` in a text editor and update the ```nest_user``` and ``
 
 As of January 2020, the nest-api library is unable to authenticate directly to the Google Nest API. So instead you have to copy/paste in a session credential which will be cached and used until it expires. At which point you have to do it again. Run the ```nest-api-php-workaround-login.php``` script (copied into this repo from its [original location](https://gist.github.com/gboudreau/8b8851a9c99140b6234856bbc80a2d24)), and follow the instructions.
 
+```bash
+php nest-api-php-workaround-login.php
+```
+
 Once you've done that, run the test script to make sure that the API is able to pull your thermostat data correctly from nest.com.
 
 ```bash
