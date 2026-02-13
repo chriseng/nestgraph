@@ -4,6 +4,7 @@
 Used for debugging and by check_nest.sh to verify device connectivity.
 """
 
+import argparse
 import json
 import os
 import sys
@@ -49,6 +50,11 @@ def list_devices(config, access_token):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="List Nest devices via the Google SDM API")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Display full API response for each device")
+    args = parser.parse_args()
+
     config = load_config()
 
     if not config.get("refresh_token"):
@@ -71,37 +77,50 @@ def main():
         print(f"Device: {device_name}")
         print(f"  Type: {device_type}")
 
-        connectivity = traits.get("sdm.devices.traits.Connectivity", {})
-        if connectivity:
-            print(f"  Connectivity: {connectivity.get('status', 'UNKNOWN')}")
+        if args.verbose:
+            # Print all traits with readable names
+            for trait_name, trait_data in sorted(traits.items()):
+                short_name = trait_name.replace("sdm.devices.traits.", "")
+                print(f"  {short_name}:")
+                for key, value in trait_data.items():
+                    print(f"    {key}: {value}")
+            if "parentRelations" in device:
+                print("  Parent Relations:")
+                for rel in device["parentRelations"]:
+                    print(f"    parent: {rel.get('parent', 'Unknown')}")
+                    print(f"    displayName: {rel.get('displayName', 'Unknown')}")
+        else:
+            connectivity = traits.get("sdm.devices.traits.Connectivity", {})
+            if connectivity:
+                print(f"  Connectivity: {connectivity.get('status', 'UNKNOWN')}")
 
-        temperature = traits.get("sdm.devices.traits.Temperature", {})
-        if temperature:
-            celsius = temperature.get("ambientTemperatureCelsius")
-            if celsius is not None:
-                fahrenheit = celsius * 1.8 + 32
-                print(f"  Current Temperature: {fahrenheit:.1f}F ({celsius:.1f}C)")
+            temperature = traits.get("sdm.devices.traits.Temperature", {})
+            if temperature:
+                celsius = temperature.get("ambientTemperatureCelsius")
+                if celsius is not None:
+                    fahrenheit = celsius * 1.8 + 32
+                    print(f"  Current Temperature: {fahrenheit:.1f}F ({celsius:.1f}C)")
 
-        humidity = traits.get("sdm.devices.traits.Humidity", {})
-        if humidity:
-            print(f"  Humidity: {humidity.get('ambientHumidityPercent')}%")
+            humidity = traits.get("sdm.devices.traits.Humidity", {})
+            if humidity:
+                print(f"  Humidity: {humidity.get('ambientHumidityPercent')}%")
 
-        setpoint = traits.get("sdm.devices.traits.ThermostatTemperatureSetpoint", {})
-        if setpoint:
-            heat_c = setpoint.get("heatCelsius")
-            cool_c = setpoint.get("coolCelsius")
-            if heat_c is not None:
-                print(f"  Heat Setpoint: {heat_c * 1.8 + 32:.1f}F ({heat_c:.1f}C)")
-            if cool_c is not None:
-                print(f"  Cool Setpoint: {cool_c * 1.8 + 32:.1f}F ({cool_c:.1f}C)")
+            setpoint = traits.get("sdm.devices.traits.ThermostatTemperatureSetpoint", {})
+            if setpoint:
+                heat_c = setpoint.get("heatCelsius")
+                cool_c = setpoint.get("coolCelsius")
+                if heat_c is not None:
+                    print(f"  Heat Setpoint: {heat_c * 1.8 + 32:.1f}F ({heat_c:.1f}C)")
+                if cool_c is not None:
+                    print(f"  Cool Setpoint: {cool_c * 1.8 + 32:.1f}F ({cool_c:.1f}C)")
 
-        hvac = traits.get("sdm.devices.traits.ThermostatHvac", {})
-        if hvac:
-            print(f"  HVAC Status: {hvac.get('status', 'UNKNOWN')}")
+            hvac = traits.get("sdm.devices.traits.ThermostatHvac", {})
+            if hvac:
+                print(f"  HVAC Status: {hvac.get('status', 'UNKNOWN')}")
 
-        mode = traits.get("sdm.devices.traits.ThermostatMode", {})
-        if mode:
-            print(f"  Thermostat Mode: {mode.get('mode', 'UNKNOWN')}")
+            mode = traits.get("sdm.devices.traits.ThermostatMode", {})
+            if mode:
+                print(f"  Thermostat Mode: {mode.get('mode', 'UNKNOWN')}")
 
         print()
 
