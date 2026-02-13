@@ -80,7 +80,7 @@ You should see your thermostat listed with its current temperature, humidity, an
 Choose a password for your local MySQL nest database and update it in `cli/config.json` and `dbsetup`. Then create the database:
 
 ```bash
-mysql -u root < dbsetup
+mysql -u root < cli/dbsetup
 ```
 
 ### 7. Set Up Cron Jobs
