@@ -1,0 +1,12 @@
+{
+    "google_cloud_project_id": "your-google-cloud-project-id",
+    "sdm_project_id": "your-sdm-project-id",
+    "oauth_client_id": "your-oauth-client-id.apps.googleusercontent.com",
+    "oauth_client_secret": "your-oauth-client-secret",
+    "refresh_token": "",
+    "db_host": "127.0.0.1",
+    "db_user": "nest_admin",
+    "db_pass": "choose_a_db_password",
+    "db_name": "nest",
+    "local_tz": "America/New_York"
+}
