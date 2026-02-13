@@ -17,7 +17,7 @@ else
 fi
 
 function creds_valid() {
-  if [[ "${1}" == *"invalid user credentials"* ]]; then
+  if [[ "${1}" == *"Error refreshing token"* ]] || [[ "${1}" == *"No refresh token"* ]]; then
     false
   else
     true
@@ -25,21 +25,17 @@ function creds_valid() {
 }
 
 function device_online() {
-  if [[ "${1}" == *"[online] => 1"* ]]; then
+  if [[ "${1}" == *"Connectivity: ONLINE"* ]]; then
     true
   else
     false
   fi
 }
 
-function last_connection() {
-  echo -e "${1}" | grep -o -E "\[last_connection\] => .{19}" | cut -c22-
-}
-
 SCRIPT=$(basename "$0")
 DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
-DEV_INFO=$(php $DIR/device_info.php 2>&1 | sed -e 's/^[[:space:]]*//')
-LAST=$(last_connection "${DEV_INFO}")
+PYTHON="$DIR/venv/bin/python3"
+DEV_INFO=$($PYTHON $DIR/sdm_device_info.py 2>&1)
 
 if [ -z "${DEV_INFO}" ]; then
   exit 1
@@ -47,7 +43,7 @@ fi
 
 if creds_valid "${DEV_INFO}"; then
   if ! device_online "${DEV_INFO}"; then
-    STATUS="Nest device is offline, last seen ${LAST}"
+    STATUS="Nest device is offline or not reachable"
     if [[ -n "${RECIPIENTS[@]}" ]]; then
       for recip in "${RECIPIENTS[@]}"; do
 	echo "${STATUS}" | mail ${MAILFROM} -s"${SCRIPT}: device offline" ${recip}
@@ -57,13 +53,12 @@ if creds_valid "${DEV_INFO}"; then
     fi
   fi
 else
-  STATUS="Nestgraph credential cache has expired"
+  STATUS="Nestgraph SDM API credentials have expired or are invalid"
   if [[ -n "${RECIPIENTS[@]}" ]]; then
     for recip in "${RECIPIENTS[@]}"; do
       echo "${STATUS}" | mail ${MAILFROM} -s"${SCRIPT}: expired session credentials" ${recip}
     done
   else
-    echo "${STATUS}"    
+    echo "${STATUS}"
   fi
 fi
-

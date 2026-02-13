@@ -1,18 +1,20 @@
 <?php
 
-require 'inc/config.php';
-require 'inc/class.db.php';
+$json = json_decode(file_get_contents(__DIR__ . '/config.json'), true);
 
 define('DEFAULT_HRS', 72);
 
-$hrs = DEFAULT_HRS; 
+$hrs = DEFAULT_HRS;
 if (array_key_exists("hrs", $_GET)) {
   $hrs = $_GET["hrs"];
 }
 
 try {
-  $db = new DB($config);
-  if ($stmt = $db->res->prepare("SELECT * from data where timestamp>=DATE_SUB(NOW(), INTERVAL ? HOUR) order by timestamp")) {
+  $db = new mysqli($json['db_host'], $json['db_user'], $json['db_pass'], $json['db_name']);
+  if ($db->connect_error) {
+    throw new Exception($db->connect_error);
+  }
+  if ($stmt = $db->prepare("SELECT * from data where timestamp>=DATE_SUB(NOW(), INTERVAL ? HOUR) order by timestamp")) {
     $stmt->bind_param("i", $hrs);
     $stmt->execute();
     $stmt->bind_result($timestamp, $heating, $target, $current, $humidity, $updated);

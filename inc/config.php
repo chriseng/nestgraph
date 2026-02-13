@@ -1,6 +1,6 @@
 <?php
 
-$config = array('db_ip' => '127.0.0.1', 
+$config = array('db_ip' => '127.0.0.1',
 		'db_user' => 'nest_admin',
 		'db_pass' => 'choose_a_db_password',
 		'db_name' => 'nest',
