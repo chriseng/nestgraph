@@ -44,9 +44,7 @@ I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Docu
 ```bash
 cd [your-web-root]
 git clone https://github.com/chriseng/nestgraph.git
-cd nestgraph
-chmod 700 cli
-cd cli
+cd nestgraph/cli
 cp config.json.template config.json
 ```
 
