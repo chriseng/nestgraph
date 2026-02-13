@@ -8,13 +8,13 @@ The point of this project was to see how well the Nest algorithms work. In parti
 
 Unfortunately, you can't actually access historical temperature data on the Nest website or via the iOS app. It shows you when heating was turned on/off and what the temperature targets were at those times, but it doesn't give you any indication of how well or how poorly the thermostat performed. This could be by design, as it's a lot of information to store.  
 
-This project uses an unofficial Nest API to pull your temperature readings periodically and store them in a database so that you can inspect the data yourself in an easily consumable form.
+This project uses Google's official [Smart Device Management (SDM) API](https://developers.google.com/nest/device-access) to pull your temperature readings periodically and store them in a database so that you can inspect the data yourself in an easily consumable form.
 
 I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Documents) library a little.
 
 ## Features
 
-* Polls Nest website to collect thermostat telemetry
+* Polls Google SDM API to collect thermostat telemetry
 * Stores selected data in local MySQL database
 * Generates a nice visualization of actual temp vs. set point
 * Lower mini-chart is interactive pan-and-zoom of the upper chart
@@ -24,71 +24,81 @@ I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Docu
 
 ## Dependencies
 
-* LAMP stack
-* Unofficial [nest-api](https://github.com/gboudreau/nest-api) library by Guillaume Boudreau
+* Apache + PHP with mysqli (serves the visualization and data endpoint)
+* Python 3 with venv (runs the data collection scripts)
+* MySQL
+* Google [Smart Device Management API](https://developers.google.com/nest/device-access) access ($5 one-time registration)
 
 ## Getting Started
 
-Clone this repo into your web root.
+### 1. Google API Setup
+
+1. Register at [Google Device Access Console](https://console.nest.google.com/device-access) ($5 one-time fee) and create a project to get your **SDM Project ID**
+2. In [Google Cloud Console](https://console.cloud.google.com), create a project and enable the **Smart Device Management API**
+3. Create **OAuth 2.0 credentials** (Web application type) and add `http://localhost:8080` as an authorized redirect URI
+4. Configure the **OAuth consent screen** (External), add your Google account as a test user, and add the scope `https://www.googleapis.com/auth/sdm.service`
+5. In the Device Access Console, link your OAuth client ID to your SDM project
+
+### 2. Clone and Configure
 
 ```bash
 cd [your-web-root]
 git clone https://github.com/chriseng/nestgraph.git
-```
-
-Grab a copy of nest-api and unzip into the ```nestgraph``` directory you created in the previous step. It should create a subdirectory called ```nest-api-master```.
-
-```bash
 cd nestgraph
-wget https://github.com/gboudreau/nest-api/archive/master.zip
-unzip master.zip
-rm -f master.zip
+cp config.json.template config.json
 ```
-Open ```inc/config.php``` in a text editor and update the ```nest_user``` and ```nest_pass``` variables with your username and password for nest.com.  Update the ```local_tz``` variable to reflect your time zone.
 
-As of January 2020, the nest-api library is unable to authenticate directly to the Google Nest API. So instead you have to copy/paste in a session credential which will be cached and used until it expires. At which point you have to do it again. Run the ```nest-api-php-workaround-login.php``` script (copied into this repo from its [original location](https://gist.github.com/gboudreau/8b8851a9c99140b6234856bbc80a2d24)), and follow the instructions.
+Edit `config.json` and fill in your SDM project ID, Google Cloud OAuth client ID and secret, database credentials, and timezone.
+
+### 3. Set Up Python Environment
 
 ```bash
-php nest-api-php-workaround-login.php
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
-Once you've done that, run the test script to make sure that the API is able to pull your thermostat data correctly from nest.com.
+### 4. Authorize with Google
 
 ```bash
-php test.php
+venv/bin/python3 sdm_auth.py
 ```
 
-If this works, you should see a bunch of stuff fly across the screen, ending with something like this:
+This opens a browser for Google OAuth consent. After authorizing, the refresh token is saved to `config.json` automatically.
+
+### 5. Verify Connectivity
 
 ```bash
-Heating             : 0
-Timestamp           : 2013-01-15 22:10:39
-Target temperature  : 67.00
-Current temperature : 67.53
-Current humidity    : 29
+venv/bin/python3 sdm_device_info.py
 ```
 
-Choose a password for your local MySQL nest database, and update it in two places: ```inc/config.php``` (the ```db_pass``` variable) and ```dbsetup```.
+You should see your thermostat listed with its current temperature, humidity, and HVAC status.
 
-As root or using a DBA account, run the commands in dbsetup to create the MySQL database that will be used to store historical data.
+### 6. Set Up the Database
+
+Choose a password for your local MySQL nest database and update it in `config.json` and `dbsetup`. Then create the database:
 
 ```bash
 mysql -u root < dbsetup
 ```
 
-Create a cron job to poll the website periodically and update the local database. The thermostat does not phone home on a fixed schedule, but typically it updates in 5 to 30 minute intervals. The script will only insert into the database if there is new data available. Obviously, update the path to ```insert.php``` if it's not in ```/var/www/html/nestgraph```.
+### 7. Set Up Cron Jobs
+
+Create a cron job to collect data every 5 minutes:
 
 ```bash
-*/5 * * * *     /usr/bin/php /var/www/html/nestgraph/insert.php > /dev/null
+*/5 * * * *     /var/www/html/nestgraph/venv/bin/python3 /var/www/html/nestgraph/sdm_collect.py >> /var/log/nestgraph.log 2>&1
 ```
 
-Optionally, create a cron job to check periodically if your cached session credential is still valid and if your thermostat has gone offline. I have mine run every 30 minutes; adjust as appropriate. Populate the recipient email(s) in ```check_nest.sh``` if you want email notifications, then add the crontab entry, again updating the below to use the appropriate execution path for your system.
+Optionally, create a cron job to check if your thermostat has gone offline. Populate the recipient email(s) in `check_nest.sh` if you want email notifications:
 
 ```bash
 */30 * * * *    /var/www/html/nestgraph/check_nest.sh
 ```
 
-Point web browser to the ```nestgraph``` directory on your webserver!  Admire pretty graphs (actually, they won't be all that pretty until it has collected some data).
+### 8. View the Graph
+
+Point your web browser to the `nestgraph` directory on your webserver!
 
 
 ## Known Issues
@@ -99,5 +109,4 @@ Point web browser to the ```nestgraph``` directory on your webserver!  Admire pr
 * Assumes you want temperatures displayed in Fahrenheit
 * Doesn't automatically redraw when you resize the browser window
 * Labels (current/target/heating) don't follow the trend lines when you pan/zoom
-* Have to manually update session credential each time it expires due to [Jan 2020 login changes](https://github.com/gboudreau/nest-api/issues/110)
 
