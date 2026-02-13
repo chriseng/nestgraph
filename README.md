@@ -22,6 +22,14 @@ I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Docu
 
 ![nestgraph screenshot](https://github.com/chriseng/nestgraph/raw/master/nestgraph-screenshot.png)
 
+## Compatible Thermostats
+
+All Nest thermostats linked to a Google account are supported via the [SDM API](https://developers.google.com/nest/device-access/api/thermostat):
+
+* Nest Learning Thermostat (1st, 2nd, 3rd gen)
+* Nest Thermostat E
+* Nest Thermostat (2020)
+
 ## Dependencies
 
 * Apache + PHP with mysqli (serves the visualization and data endpoint)
