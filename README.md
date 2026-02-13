@@ -32,8 +32,8 @@ All Nest thermostats linked to a Google account are supported via the [SDM API](
 
 ## Dependencies
 
-* Apache + PHP with mysqli (serves the visualization and data endpoint)
-* Python 3 with venv (runs the data collection scripts)
+* Apache with `mod_cgi` enabled (serves the visualization and data endpoint)
+* Python 3 with venv (data collection scripts and CGI endpoint)
 * MySQL
 * Google [Smart Device Management API](https://developers.google.com/nest/device-access) access ($5 one-time registration)
 
@@ -47,7 +47,24 @@ All Nest thermostats linked to a Google account are supported via the [SDM API](
 4. Configure the **OAuth consent screen** (External), add your Google account as a test user, and add the scope `https://www.googleapis.com/auth/sdm.service`
 5. In the Device Access Console, link your OAuth client ID to your SDM project
 
-### 2. Clone and Configure
+### 2. Enable Apache CGI
+
+Enable `mod_cgi` if it isn't already:
+
+```bash
+sudo a2enmod cgi
+sudo systemctl restart apache2
+```
+
+Ensure your Apache site configuration allows `.htaccess` overrides for the nestgraph directory (the repo includes an `.htaccess` that enables CGI for `.py` files):
+
+```apache
+<Directory /var/www/html/nestgraph>
+    AllowOverride All
+</Directory>
+```
+
+### 3. Clone and Configure
 
 ```bash
 cd [your-web-root]
@@ -58,7 +75,7 @@ cp config.json.template config.json
 
 Edit `cli/config.json` and fill in your SDM project ID, Google Cloud OAuth client ID and secret, database credentials, and timezone.
 
-### 3. Set Up Python Environment
+### 4. Set Up Python Environment
 
 ```bash
 cd cli
@@ -67,7 +84,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Authorize with Google
+### 5. Authorize with Google
 
 ```bash
 cli/venv/bin/python3 cli/sdm_auth.py
@@ -75,7 +92,7 @@ cli/venv/bin/python3 cli/sdm_auth.py
 
 This opens a browser for Google OAuth consent. After authorizing, the refresh token is saved to `cli/config.json` automatically.
 
-### 5. Verify Connectivity
+### 6. Verify Connectivity
 
 ```bash
 cli/venv/bin/python3 cli/sdm_device_info.py
@@ -83,7 +100,7 @@ cli/venv/bin/python3 cli/sdm_device_info.py
 
 You should see your thermostat listed with its current temperature, humidity, and HVAC status.
 
-### 6. Set Up the Database
+### 7. Set Up the Database
 
 Choose a password for your local MySQL nest database and update it in `cli/config.json` and `dbsetup`. Then create the database:
 
@@ -91,7 +108,7 @@ Choose a password for your local MySQL nest database and update it in `cli/confi
 mysql -u root < cli/dbsetup
 ```
 
-### 7. Set Up Cron Jobs
+### 8. Set Up Cron Jobs
 
 Create a cron job to collect data every 5 minutes:
 
@@ -105,7 +122,7 @@ Optionally, create a cron job to check if your thermostat has gone offline. Popu
 */30 * * * *    /var/www/html/nestgraph/cli/check_nest.sh
 ```
 
-### 8. View the Graph
+### 9. View the Graph
 
 Point your web browser to the `nestgraph` directory on your webserver!
 
