@@ -1,6 +1,6 @@
 <?php
 
-$json = json_decode(file_get_contents(__DIR__ . '/config.json'), true);
+$json = json_decode(file_get_contents(__DIR__ . '/cli/config.json'), true);
 
 define('DEFAULT_HRS', 72);
 

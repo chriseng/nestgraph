@@ -1,3 +1,4 @@
-config.json
+cli/config.json
+cli/venv/
 __pycache__/
 *.pyc

@@ -44,15 +44,16 @@ I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Docu
 ```bash
 cd [your-web-root]
 git clone https://github.com/chriseng/nestgraph.git
-cd nestgraph
+cd nestgraph/cli
 cp config.json.template config.json
 ```
 
-Edit `config.json` and fill in your SDM project ID, Google Cloud OAuth client ID and secret, database credentials, and timezone.
+Edit `cli/config.json` and fill in your SDM project ID, Google Cloud OAuth client ID and secret, database credentials, and timezone.
 
 ### 3. Set Up Python Environment
 
 ```bash
+cd cli
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -61,22 +62,22 @@ pip install -r requirements.txt
 ### 4. Authorize with Google
 
 ```bash
-venv/bin/python3 sdm_auth.py
+cli/venv/bin/python3 cli/sdm_auth.py
 ```
 
-This opens a browser for Google OAuth consent. After authorizing, the refresh token is saved to `config.json` automatically.
+This opens a browser for Google OAuth consent. After authorizing, the refresh token is saved to `cli/config.json` automatically.
 
 ### 5. Verify Connectivity
 
 ```bash
-venv/bin/python3 sdm_device_info.py
+cli/venv/bin/python3 cli/sdm_device_info.py
 ```
 
 You should see your thermostat listed with its current temperature, humidity, and HVAC status.
 
 ### 6. Set Up the Database
 
-Choose a password for your local MySQL nest database and update it in `config.json` and `dbsetup`. Then create the database:
+Choose a password for your local MySQL nest database and update it in `cli/config.json` and `dbsetup`. Then create the database:
 
 ```bash
 mysql -u root < dbsetup
@@ -87,13 +88,13 @@ mysql -u root < dbsetup
 Create a cron job to collect data every 5 minutes:
 
 ```bash
-*/5 * * * *     /var/www/html/nestgraph/venv/bin/python3 /var/www/html/nestgraph/sdm_collect.py >> /var/log/nestgraph.log 2>&1
+*/5 * * * *     /var/www/html/nestgraph/cli/venv/bin/python3 /var/www/html/nestgraph/cli/sdm_collect.py >> /var/log/nestgraph.log 2>&1
 ```
 
-Optionally, create a cron job to check if your thermostat has gone offline. Populate the recipient email(s) in `check_nest.sh` if you want email notifications:
+Optionally, create a cron job to check if your thermostat has gone offline. Populate the recipient email(s) in `cli/check_nest.sh` if you want email notifications:
 
 ```bash
-*/30 * * * *    /var/www/html/nestgraph/check_nest.sh
+*/30 * * * *    /var/www/html/nestgraph/cli/check_nest.sh
 ```
 
 ### 8. View the Graph
