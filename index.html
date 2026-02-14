@@ -166,11 +166,28 @@ var COLORS = {
   heating: "#e74c3c"
 };
 
+// custom multi-resolution time format (no leading zero on hours)
+var timeFormats = [
+  [d3.time.format("%Y"),        function() { return true; }],
+  [d3.time.format("%b"),        function(d) { return d.getMonth(); }],
+  [d3.time.format("%b %-d"),    function(d) { return d.getDate() != 1; }],
+  [d3.time.format("%-I %p"),    function(d) { return d.getHours(); }],
+  [d3.time.format("%-I:%M %p"), function(d) { return d.getMinutes(); }],
+  [d3.time.format(":%S"),       function(d) { return d.getSeconds(); }]
+];
+function multiFormat(date) {
+  for (var i = timeFormats.length - 1; i >= 0; i--) {
+    if (timeFormats[i][1](date)) return timeFormats[i][0](date);
+  }
+  return timeFormats[0][0](date);
+}
+
 // d3 x axis object for upper plot area
 var xAxis = d3.svg.axis().
   scale(x)
   .orient("bottom")
-  .ticks(width/80);
+  .ticks(width/80)
+  .tickFormat(multiFormat);
 
 // d3 y axis object for upper plot area
 var yAxis = d3.svg.axis()
@@ -188,7 +205,8 @@ var yGridlines = d3.svg.axis()
 var xAxis2 = d3.svg.axis()
   .scale(x2)
   .orient("bottom")
-  .ticks(width/80);
+  .ticks(width/80)
+  .tickFormat(multiFormat);
 
 // d3 brush object for lower plot area (panning/zooming)
 var brush = d3.svg.brush()
