@@ -283,7 +283,8 @@ function drawCurrentSegments(container, dataPoints, heatingData, xScale, yScale,
 
 // tooltip ref
 var tooltip = d3.select("#tooltip");
-var tooltipFormat = d3.time.format("%a %b %-d %Y %-I:%M:%S %p");
+var tooltipDateFmt = d3.time.format("%a %b %-d %Y");
+var tooltipTimeFmt = d3.time.format("%-I:%M:%S %p");
 
 // stored data refs for brush redraw
 var storedCurrentValues, storedHeatingRaw;
@@ -452,7 +453,7 @@ d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
     .on("mouseover", function(d) {
       tooltip
         .style("opacity", 1)
-        .html(tooltipFormat(d.date) + "<br><strong>" + d.val + "\u00B0 F</strong>");
+        .html(tooltipDateFmt(d.date) + "<br>" + tooltipTimeFmt(d.date) + "<br><strong>" + d.val + "\u00B0 F</strong>");
     })
     .on("mousemove", function() {
       tooltip
