@@ -227,71 +227,86 @@ function drawChart() {
   var width2 = fullWidth - margin2.left - margin2.right;
   var height2 = fullHeight - margin2.top - margin2.bottom;
 
+  // d3 scales for upper and lower plot areas
   var x = d3.time.scale().range([0, width]);
   var y = d3.scale.linear().range([height, 0]);
   var x2 = d3.time.scale().range([0, width]);
   var y2 = d3.scale.linear().range([height2, 0]);
 
+  // d3 x axis object for upper plot area
   var xAxis = d3.svg.axis()
     .scale(x)
     .orient("bottom")
     .ticks(width/80)
     .tickFormat(multiFormat);
 
+  // d3 y axis object for upper plot area
   var yAxis = d3.svg.axis()
     .scale(y)
     .orient("left");
 
+  // d3 y gridlines (horizontal dashed lines at each y tick)
   var yGridlines = d3.svg.axis()
     .scale(y)
     .orient("left")
     .tickSize(-width, 0, 0)
     .tickFormat("");
 
+  // d3 x axis object for lower plot area
   var xAxis2 = d3.svg.axis()
     .scale(x2)
     .orient("bottom")
     .ticks(width/80)
     .tickFormat(multiFormat);
 
+  // d3 line object for upper trendlines (step function)
   var lineStepafter = d3.svg.line()
     .interpolate("step-after")
     .x(function(d) { return x(d.date); })
     .y(function(d) { return y(d.val); });
 
+  // d3 line object for lower trendlines (step function)
   var lineStepafter2 = d3.svg.line()
     .interpolate("step-after")
     .x(function(d) { return x2(d.date); })
     .y(function(d) { return y2(d.val); });
 
+  // d3 brush object for lower plot area (panning/zooming)
   var brush = d3.svg.brush()
     .x(x2)
     .on("brush", brushUpdate);
 
+  // create main svg object
   var svg = d3.select("body").append("svg")
     .attr("width", fullWidth)
     .attr("height", fullHeight);
 
+  // create clip path so zoomed-in paths can't extend beyond the plot area
   svg.append("defs").append("clipPath")
     .attr("id", "clip")
     .append("rect")
     .attr("width", width)
     .attr("height", height);
 
+  // append upper <g>
   var upper = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+  // append lower <g>
   var lower = svg.append("g")
     .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")");
 
+  // callback function for d3 brush object
   function brushUpdate() {
     x.domain(brush.empty() ? x2.domain() : brush.extent());
     upper.select(".x.axis").call(xAxis);
     upper.select(".gridline").call(yGridlines);
 
+    // redraw target line
     upper.selectAll(".plot.target path")
       .attr("d", function(d) { return lineStepafter(d.values); });
 
+    // redraw current as colored segments
     drawCurrentSegments(upper, storedData.currentValues, storedData.heatingRaw, x, y, "clip", 2.5);
 
     upper.selectAll("circle")
@@ -306,24 +321,29 @@ function drawChart() {
   var heatingRaw = data.heatingRaw;
   var points = [currentPoints, targetPoints];
 
+  // define the x-domains (min and max of actual date values)
   x.domain(d3.extent(data.currentValues, function(d) { return d.date; }));
   x2.domain(x.domain());
 
+  // define the y-domains (min and max of the union of all trendlines, with padding)
   y.domain([
       +d3.min(points, function(c) { return d3.min(c.values, function(v) { return v.val }); }) - 0.5,
       +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); }) + 0.5
   ]);
   y2.domain(y.domain());
 
+  // draw upper gridlines
   upper.append("g")
     .attr("class", "gridline")
     .call(yGridlines);
 
+  // draw upper x axis
   upper.append("g")
     .attr("class", "x axis upper")
     .attr("transform", "translate(0," + height + ")")
     .call(xAxis);
 
+  // draw upper y axis
   upper.append("g")
     .attr("class", "y axis upper")
     .call(yAxis)
@@ -334,11 +354,13 @@ function drawChart() {
     .style("text-anchor", "end")
     .text("Temperature (F)");
 
+  // draw lower x axis
   lower.append("g")
     .attr("class", "x axis lower")
     .attr("transform", "translate(0," + height2 + ")")
     .call(xAxis2);
 
+  // draw upper target trendline
   upper.selectAll(".plot.target")
     .data([targetPoints])
     .enter().append("g")
@@ -349,8 +371,10 @@ function drawChart() {
     .style("stroke", COLORS.target)
     .attr("clip-path", "url(#clip)");
 
+  // draw upper current trendline as colored segments
   drawCurrentSegments(upper, currentPoints.values, heatingRaw, x, y, "clip", 2.5);
 
+  // draw lower target trendline
   lower.selectAll(".plot.target-lower")
     .data([targetPoints])
     .enter().append("g")
@@ -360,6 +384,7 @@ function drawChart() {
     .attr("d", function(d) { return lineStepafter2(d.values); })
     .style("stroke", COLORS.target);
 
+  // draw lower current trendline as colored segments
   drawCurrentSegments(lower, currentPoints.values, heatingRaw, x2, y2, null, 1.5);
 
   // --- Legend ---
@@ -395,7 +420,7 @@ function drawChart() {
       .text(d.label);
   });
 
-  // --- Tooltip circles ---
+  // draw the circles with hover tooltips
   var circleGroup = upper.append("g")
     .attr("class", "circles")
     .attr("clip-path", "url(#clip)");
@@ -425,7 +450,7 @@ function drawChart() {
       tooltip.style("opacity", 0);
     });
 
-  // --- Brush ---
+  // draw the d3 pan/zoom "brush" object
   lower.append("g")
     .attr("class", "x brush")
     .call(brush)
