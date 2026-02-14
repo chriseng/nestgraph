@@ -337,7 +337,7 @@ d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
 
   // define the y-domains
   y.domain([
-      +d3.min(points, function(c) { return d3.min(c.values, function(v) { return v.val }); }),
+      +d3.min(points, function(c) { return d3.min(c.values, function(v) { return v.val }); }) - 0.5,
       +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); }) + 0.5
   ]);
   y2.domain(y.domain());
