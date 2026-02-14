@@ -45,10 +45,10 @@ All Nest thermostats linked to a Google account are supported via the [SDM API](
 
 ### 1. Google API Setup
 
-1. Register at [Google Device Access Console](https://console.nest.google.com/device-access) ($5 one-time fee) and create a project to get your **SDM Project ID**
-2. In [Google Cloud Console](https://console.cloud.google.com), create a project and enable the **Smart Device Management API**
-3. Create **OAuth 2.0 credentials** (Web application type) and add `http://localhost:8080` as an authorized redirect URI
-4. Configure the **OAuth consent screen** (External), add your Google account as a test user, and add the scope `https://www.googleapis.com/auth/sdm.service`
+1. In [Google Cloud Console](https://console.cloud.google.com), create a project and enable the **Smart Device Management API**
+2. Create **OAuth 2.0 credentials** (Web application type) and add `http://localhost:8080` as an authorized redirect URI
+3. Configure the **OAuth consent screen** (External), add your Google account as a test user, and add the scope `https://www.googleapis.com/auth/sdm.service`
+4. Register at [Google Device Access Console](https://console.nest.google.com/device-access) ($5 one-time fee) and create a project to get your **SDM Project ID**
 5. In the Device Access Console, link your OAuth client ID to your SDM project
 
 ### 2. Enable Apache CGI
@@ -94,7 +94,7 @@ pip install -r requirements.txt
 cli/venv/bin/python3 cli/sdm_auth.py
 ```
 
-This opens a browser for Google OAuth consent. After authorizing, the refresh token is saved to `cli/config.json` automatically.
+This opens a browser for Google OAuth consent, in order to authorize your Google Home account to share device data with your project. After authorizing, the refresh token is saved to `cli/config.json` automatically.
 
 ### 6. Verify Connectivity
 
