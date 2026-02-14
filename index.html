@@ -443,8 +443,9 @@ d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
     .attr("r", 10)
     .attr("stroke", "var(--axis)")
     .attr("stroke-width", 1)
-    .attr("fill", "none")
+    .attr("fill", "transparent")
     .attr("opacity", 0.3)
+    .style("pointer-events", "all")
     .on("mouseover", function(d) {
       tooltip
         .style("opacity", 1)
