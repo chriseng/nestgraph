@@ -213,18 +213,6 @@ var brush = d3.svg.brush()
   .x(x2)
   .on("brush", brushUpdate);
 
-// d3 line object for upper trendlines (basis plot)
-var line = d3.svg.line()
-  .interpolate("basis")
-  .x(function(d) { return x(d.date); })
-  .y(function(d) { return y(d.val); });
-
-// d3 line object for lower trendlines (basis plot)
-var line2 = d3.svg.line()
-  .interpolate("basis")
-  .x(function(d) { return x2(d.date); })
-  .y(function(d) { return y2(d.val); });
-
 // d3 line object for upper trendlines (step function)
 var lineStepafter = d3.svg.line()
   .interpolate("step-after")
