@@ -4,42 +4,143 @@
   <title>NestGraph</title>
   <style>
 
-body {
-  font: 11px tahoma, arial, sans-serif;
+:root {
+  --bg: #ffffff;
+  --text: #333333;
+  --gridline: #ddd;
+  --axis: #999;
+  --tooltip-bg: #fff;
+  --tooltip-border: #ccc;
+  --tooltip-shadow: rgba(0,0,0,0.15);
+  --legend-bg: rgba(255,255,255,0.85);
+  --brush-fill: rgba(100,100,200,0.2);
 }
 
-  .axis path,
-  .axis line {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
-  }
+body.dark {
+  --bg: #1a1a2e;
+  --text: #cccccc;
+  --gridline: #333;
+  --axis: #555;
+  --tooltip-bg: #2a2a3e;
+  --tooltip-border: #444;
+  --tooltip-shadow: rgba(0,0,0,0.4);
+  --legend-bg: rgba(26,26,46,0.9);
+  --brush-fill: rgba(100,100,200,0.3);
+}
 
-  .line {
-    fill: none;
-    stroke: steelblue;
-    stroke-width: 2.0px;
-  }
+body {
+  font: 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 16px;
+  transition: background 0.3s, color 0.3s;
+}
 
-  .brush .extent {
-    stroke: #fff;
-    fill-opacity: .125;
-    shape-rendering: crispEdges;
-  }
+h1 {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--axis);
+  margin: 0 0 8px 0;
+}
+
+#theme-toggle {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  background: var(--legend-bg);
+  color: var(--text);
+  border: 1px solid var(--axis);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font: inherit;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: var(--axis);
+  stroke-width: 1px;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  fill: var(--text);
+}
+
+.gridline line {
+  stroke: var(--gridline);
+  stroke-dasharray: 3,3;
+  stroke-width: 1px;
+}
+.gridline path {
+  stroke: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2.5px;
+}
+
+.line-lower {
+  fill: none;
+  stroke-width: 1.5px;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill: var(--brush-fill);
+  shape-rendering: crispEdges;
+}
+
+#tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--tooltip-bg);
+  color: var(--text);
+  border: 1px solid var(--tooltip-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  box-shadow: 0 2px 8px var(--tooltip-shadow);
+  opacity: 0;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
 
   </style>
 </head>
 <body>
+  <h1>NestGraph</h1>
+  <button id="theme-toggle">Dark</button>
+  <div id="tooltip"></div>
   <script src="https://d3js.org/d3.v3.min.js"></script>
   <script>
+
+// --- Theme ---
+(function() {
+  var saved = localStorage.getItem('nestgraph-theme');
+  if (saved === 'dark') {
+    document.body.classList.add('dark');
+    document.getElementById('theme-toggle').textContent = 'Light';
+  }
+})();
+
+document.getElementById('theme-toggle').addEventListener('click', function() {
+  var isDark = document.body.classList.toggle('dark');
+  this.textContent = isDark ? 'Light' : 'Dark';
+  localStorage.setItem('nestgraph-theme', isDark ? 'dark' : 'light');
+});
 
 // change this if you want to limit the amount of data pulled
 var hours = 24 * 7;
 
-var fullWidth = window.innerWidth * 0.97;
-var fullHeight = window.innerHeight * 0.95;
-var upperHeight = window.innerHeight * 0.85;
-var lowerHeight = window.innerHeight * 0.10;
+var fullWidth = window.innerWidth * 0.97 - 32;
+var fullHeight = window.innerHeight * 0.90;
+var upperHeight = window.innerHeight * 0.78;
+var lowerHeight = window.innerHeight * 0.12;
 
 var margin = {top: 20, right: 50, bottom: 30 + lowerHeight, left: 50};
 var margin2 = {top: 20 + upperHeight, right: 50, bottom: 30, left: 50};
@@ -56,7 +157,11 @@ var y = d3.scale.linear().range([height, 0]);
 var x2 = d3.time.scale().range([0, width]);
 var y2 = d3.scale.linear().range([height2, 0]);
 
-var color = d3.scale.category10();
+var COLORS = {
+  current: "#2ecc71",
+  target: "#3498db",
+  heating: "#e74c3c"
+};
 
 // d3 x axis object for upper plot area
 var xAxis = d3.svg.axis().
@@ -68,6 +173,13 @@ var xAxis = d3.svg.axis().
 var yAxis = d3.svg.axis()
   .scale(y)
   .orient("left");
+
+// d3 y gridlines
+var yGridlines = d3.svg.axis()
+  .scale(y)
+  .orient("left")
+  .tickSize(-width, 0, 0)
+  .tickFormat("");
 
 // d3 x axis object for lower plot area
 var xAxis2 = d3.svg.axis()
@@ -98,7 +210,7 @@ var lineStepafter = d3.svg.line()
   .x(function(d) { return x(d.date); })
   .y(function(d) { return y(d.val); });
 
-// d3 line object for upper trendlines (step function)
+// d3 line object for lower trendlines (step function)
 var lineStepafter2 = d3.svg.line()
   .interpolate("step-after")
   .x(function(d) { return x2(d.date); })
@@ -124,54 +236,96 @@ var upper = svg.append("g")
 var lower = svg.append("g")
   .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")")
 
+// helper: draw current-temp line as colored segments (red=heating, green=not)
+function drawCurrentSegments(container, dataPoints, heatingData, xScale, yScale, clipId, strokeWidth) {
+  container.selectAll(".heating-segment").remove();
+  var g = container.select(".current-segments");
+  if (g.empty()) {
+    g = container.append("g").attr("class", "current-segments");
+    if (clipId) g.attr("clip-path", "url(#" + clipId + ")");
+  }
+  g.selectAll("line").remove();
+  for (var i = 0; i < dataPoints.length - 1; i++) {
+    var heating = heatingData[i] && +heatingData[i] === 1;
+    g.append("line")
+      .attr("x1", xScale(dataPoints[i].date))
+      .attr("y1", yScale(dataPoints[i].val))
+      .attr("x2", xScale(dataPoints[i+1].date))
+      .attr("y2", yScale(dataPoints[i+1].val))
+      .attr("stroke", heating ? COLORS.heating : COLORS.current)
+      .attr("stroke-width", strokeWidth || 2.5)
+      .attr("shape-rendering", "auto");
+  }
+}
+
+// tooltip ref
+var tooltip = d3.select("#tooltip");
+var tooltipFormat = d3.time.format("%a %b %-d %Y %-I:%M:%S %p");
+
+// stored data refs for brush redraw
+var storedCurrentValues, storedHeatingRaw;
+
 // callback function for d3 brush object
 function brushUpdate() {
   x.domain(brush.empty() ? x2.domain() : brush.extent());
   upper.select(".x.axis").call(xAxis);
-  upper.selectAll(".plot path")
-    .attr("d", function(d) { 
-      if (d.name == "current") 
-	return line(d.values); 
-      else
-	return lineStepafter(d.values); 
-    })
+  upper.select(".gridline").call(yGridlines);
+
+  // redraw target line
+  upper.selectAll(".plot.target path")
+    .attr("d", function(d) { return lineStepafter(d.values); });
+
+  // redraw current as colored segments
+  if (storedCurrentValues && storedHeatingRaw) {
+    drawCurrentSegments(upper, storedCurrentValues, storedHeatingRaw, x, y, "clip", 2.5);
+  }
+
   upper.selectAll("circle")
-    .attr("cx", function(d) { return x(d.date); }) 
-    .attr("cy", function(d) { return y(d.val); }) 
+    .attr("cx", function(d) { return x(d.date); })
+    .attr("cy", function(d) { return y(d.val); })
 }
 
 // fetch the data
 d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
-  color.domain(d3.keys(data[0]).filter(function(key) { return (key == "current" || key == "target" || key == "heating"); }));
 
   data.forEach(function(d) {
     d.date = parseDate(d.timestamp);
   });
-  
-  var points = color.domain().map(function(name) {
-    var x = {
+
+  // extract raw heating values before mapping to points
+  var heatingRaw = data.map(function(d) { return d.heating; });
+  storedHeatingRaw = heatingRaw;
+
+  // build current and target point arrays (no heating series)
+  var seriesNames = ["current", "target"];
+  var points = seriesNames.map(function(name) {
+    return {
       name: name,
       values: data.map(function(d) {
-	if (name == "heating") 
-          return { date: d.date, val: +d[name] + 60 };
-	else
-          return { date: d.date, val: +d[name] };
+        return { date: d.date, val: +d[name] };
       })
     };
-    console.log(x);
-    return x;
   });
 
-  // define the x-domains (i.e. min and max of actual date values)
+  var currentPoints = points.filter(function(f) { return f.name === "current"; })[0];
+  var targetPoints = points.filter(function(f) { return f.name === "target"; })[0];
+  storedCurrentValues = currentPoints.values;
+
+  // define the x-domains
   x.domain(d3.extent(data, function(d) { return d.date; }));
   x2.domain(x.domain());
 
-  // define the y-domains (i.e. min and max of the union of all the trendlines)
+  // define the y-domains
   y.domain([
       +d3.min(points, function(c) { return d3.min(c.values, function(v) { return v.val }); }),
       +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); }) + 0.5
   ]);
   y2.domain(y.domain());
+
+  // draw upper gridlines
+  upper.append("g")
+    .attr("class", "gridline")
+    .call(yGridlines);
 
   // draw upper x axis
   upper.append("g")
@@ -189,88 +343,100 @@ d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
     .attr("dy", ".71em")
     .style("text-anchor", "end")
     .text("Temperature (F)");
-  
+
   // draw lower x axis
   lower.append("g")
     .attr("class", "x axis lower")
     .attr("transform", "translate(0," + height2 + ")")
     .call(xAxis2);
 
-  // bind upper current/trendlines
-  upper.selectAll(".plot.temps")
-    .data(points.filter(function(f) { return f.name != 'heating'; }))
+  // --- Upper chart: target line ---
+  upper.selectAll(".plot.target")
+    .data([targetPoints])
     .enter().append("g")
-    .attr("class", function(d) { return "plot temps " + d.name; });
-
-  // bind upper furnace trendline
-  upper.selectAll(".plot.furnace")   // TODO: something different with the heating on/off data
-    .data(points.filter(function(f) { return f.name == 'heating'; }))
-    .enter().append("g")
-    .attr("class", function(d) { return "plot furnace " + d.name; });
-
-  // bind lower current and target trendlines
-  lower.selectAll(".plot.temps")
-    .data(points.filter(function(f) { return f.name != 'heating'; }))
-    .enter().append("g")
-    .attr("class", function(d) { return "plot temps " + d.name; });
-
-  // draw upper current/target/furnace trendlines
-  upper.selectAll(".plot")
+    .attr("class", "plot target")
     .append("path")
     .attr("class", "line")
-    .attr("d", function(d) { 
-      if (d.name == "current") 
-	return line(d.values); 
-      else
-	return lineStepafter(d.values); 
-    })
-    .style("stroke", function(d) { 
-      return color(d.name); 
-    })
+    .attr("d", function(d) { return lineStepafter(d.values); })
+    .style("stroke", COLORS.target)
     .attr("clip-path", "url(#clip)");
 
-  // draw lower current/target trendlines
-  lower.selectAll(".plot")
+  // --- Upper chart: current line as colored segments ---
+  drawCurrentSegments(upper, currentPoints.values, heatingRaw, x, y, "clip", 2.5);
+
+  // --- Lower chart: target line ---
+  lower.selectAll(".plot.target-lower")
+    .data([targetPoints])
+    .enter().append("g")
+    .attr("class", "plot target-lower")
     .append("path")
-    .attr("class", "line")
-    .attr("d", function(d) { 
-      if (d.name == "current") 
-	return line2(d.values); 
-      else
-	return lineStepafter2(d.values); 
-    })
-    .style("stroke", function(d) { return color(d.name); });
+    .attr("class", "line-lower")
+    .attr("d", function(d) { return lineStepafter2(d.values); })
+    .style("stroke", COLORS.target);
 
-  // draw upper labels
-  upper.selectAll(".plot")
-    .append("text")
-    .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
-    .attr("transform", function(d) { return "translate(" + x(d.value.date) + "," + y(d.value.val) + ")"; })
-    .attr("x", 3)
-    .attr("dy", ".35em")
-    .text(function(d) { return d.name; });
+  // --- Lower chart: current line as colored segments ---
+  drawCurrentSegments(lower, currentPoints.values, heatingRaw, x2, y2, null, 1.5);
 
-  // create a parent element for the circles to live
-  upper.selectAll(".current")
-    .append("g")
+  // --- Legend ---
+  var legendData = [
+    { label: "Current", color: COLORS.current },
+    { label: "Target", color: COLORS.target },
+    { label: "Heating", color: COLORS.heating }
+  ];
+  var legend = upper.append("g")
+    .attr("class", "legend")
+    .attr("transform", "translate(" + (width - 90) + ", 5)");
+
+  legend.append("rect")
+    .attr("width", 85)
+    .attr("height", legendData.length * 18 + 8)
+    .attr("rx", 4)
+    .attr("fill", "var(--legend-bg)")
+    .attr("stroke", "var(--axis)")
+    .attr("stroke-width", 0.5);
+
+  legendData.forEach(function(d, i) {
+    var g = legend.append("g")
+      .attr("transform", "translate(8," + (i * 18 + 12) + ")");
+    g.append("line")
+      .attr("x1", 0).attr("x2", 20)
+      .attr("stroke", d.color)
+      .attr("stroke-width", 2.5);
+    g.append("text")
+      .attr("x", 26)
+      .attr("dy", "0.35em")
+      .style("font-size", "11px")
+      .style("fill", "var(--text)")
+      .text(d.label);
+  });
+
+  // --- Tooltip circles ---
+  var circleGroup = upper.append("g")
     .attr("class", "circles")
     .attr("clip-path", "url(#clip)");
 
-  // draw the circles with tooltips
-  var format = d3.time.format("%a %b %-d %Y %-I:%M:%S %p");
-  upper.selectAll(".circles").selectAll(".thecircles")
-    .data((points.filter(function(f) { return f.name == 'current'; }))[0].values)
+  circleGroup.selectAll("circle")
+    .data(currentPoints.values)
     .enter().append("circle")
-    .attr("cx", function(d) { return x(d.date); }) 
-    .attr("cy", function(d) { return y(d.val); }) 
-    .attr("r", 10) 
-    .attr("stroke", "black")
-    .attr("stroke-width", 1)
-    .attr("opacity", 0.1) 
-    .append("svg:title").text(function(d) {
-      return format(d.date) + "\n" + d.val + "\u00B0 F";
+    .attr("cx", function(d) { return x(d.date); })
+    .attr("cy", function(d) { return y(d.val); })
+    .attr("r", 10)
+    .attr("fill", "transparent")
+    .attr("stroke", "none")
+    .on("mouseover", function(d) {
+      tooltip
+        .style("opacity", 1)
+        .html(tooltipFormat(d.date) + "<br><strong>" + d.val + "\u00B0 F</strong>");
+    })
+    .on("mousemove", function() {
+      tooltip
+        .style("left", (d3.event.pageX + 12) + "px")
+        .style("top", (d3.event.pageY - 28) + "px");
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
     });
-  
+
   // draw the d3 pan/zoom "brush" object
   lower.append("g")
     .attr("class", "x brush")
