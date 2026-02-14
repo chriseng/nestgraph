@@ -237,25 +237,45 @@ var lower = svg.append("g")
   .attr("transform", "translate(" + margin2.left + "," + margin2.top + ")")
 
 // helper: draw current-temp line as colored segments (red=heating, green=not)
+// Groups consecutive points by heating status and draws each run as a
+// basis-interpolated path so the curve stays smooth.
 function drawCurrentSegments(container, dataPoints, heatingData, xScale, yScale, clipId, strokeWidth) {
-  container.selectAll(".heating-segment").remove();
   var g = container.select(".current-segments");
   if (g.empty()) {
     g = container.append("g").attr("class", "current-segments");
     if (clipId) g.attr("clip-path", "url(#" + clipId + ")");
   }
-  g.selectAll("line").remove();
-  for (var i = 0; i < dataPoints.length - 1; i++) {
-    var heating = heatingData[i] && +heatingData[i] === 1;
-    g.append("line")
-      .attr("x1", xScale(dataPoints[i].date))
-      .attr("y1", yScale(dataPoints[i].val))
-      .attr("x2", xScale(dataPoints[i+1].date))
-      .attr("y2", yScale(dataPoints[i+1].val))
-      .attr("stroke", heating ? COLORS.heating : COLORS.current)
-      .attr("stroke-width", strokeWidth || 2.5)
-      .attr("shape-rendering", "auto");
+  g.selectAll("path").remove();
+
+  // build runs of consecutive points sharing the same heating state
+  var runs = [];
+  var curHeating = heatingData[0] && +heatingData[0] === 1;
+  var run = [dataPoints[0]];
+  for (var i = 1; i < dataPoints.length; i++) {
+    var h = heatingData[i] && +heatingData[i] === 1;
+    if (h !== curHeating) {
+      runs.push({ heating: curHeating, values: run });
+      // overlap: share boundary point so curves connect
+      run = [dataPoints[i - 1]];
+      curHeating = h;
+    }
+    run.push(dataPoints[i]);
   }
+  runs.push({ heating: curHeating, values: run });
+
+  var lineGen = d3.svg.line()
+    .interpolate("basis")
+    .x(function(d) { return xScale(d.date); })
+    .y(function(d) { return yScale(d.val); });
+
+  runs.forEach(function(r) {
+    g.append("path")
+      .datum(r.values)
+      .attr("fill", "none")
+      .attr("stroke", r.heating ? COLORS.heating : COLORS.current)
+      .attr("stroke-width", strokeWidth || 2.5)
+      .attr("d", lineGen);
+  });
 }
 
 // tooltip ref
@@ -421,8 +441,10 @@ d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
     .attr("cx", function(d) { return x(d.date); })
     .attr("cy", function(d) { return y(d.val); })
     .attr("r", 10)
-    .attr("fill", "transparent")
-    .attr("stroke", "none")
+    .attr("stroke", "var(--axis)")
+    .attr("stroke-width", 1)
+    .attr("fill", "none")
+    .attr("opacity", 0.15)
     .on("mouseover", function(d) {
       tooltip
         .style("opacity", 1)
