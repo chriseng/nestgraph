@@ -430,7 +430,23 @@ d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
       .text(d.label);
   });
 
-  // --- Tooltip circles ---
+  // --- Visible data-point dots ---
+  var dotGroup = upper.append("g")
+    .attr("class", "dots")
+    .attr("clip-path", "url(#clip)");
+
+  dotGroup.selectAll("circle")
+    .data(currentPoints.values)
+    .enter().append("circle")
+    .attr("cx", function(d) { return x(d.date); })
+    .attr("cy", function(d) { return y(d.val); })
+    .attr("r", 2.5)
+    .attr("fill", function(d, i) {
+      return (heatingRaw[i] && +heatingRaw[i] === 1) ? COLORS.heating : COLORS.current;
+    })
+    .attr("stroke", "none");
+
+  // --- Invisible hover targets for tooltip ---
   var circleGroup = upper.append("g")
     .attr("class", "circles")
     .attr("clip-path", "url(#clip)");
@@ -440,11 +456,9 @@ d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
     .enter().append("circle")
     .attr("cx", function(d) { return x(d.date); })
     .attr("cy", function(d) { return y(d.val); })
-    .attr("r", 10)
-    .attr("stroke", "var(--axis)")
-    .attr("stroke-width", 1)
-    .attr("fill", "none")
-    .attr("opacity", 0.15)
+    .attr("r", 8)
+    .attr("fill", "transparent")
+    .attr("stroke", "none")
     .on("mouseover", function(d) {
       tooltip
         .style("opacity", 1)
