@@ -4,13 +4,17 @@ Create pretty charts of your Nest thermostat data.
 
 ## Background
 
-The point of this project was to see how well the Nest algorithms work. In particuar, the Nest claims to minimize overshoot, which is a common problem with cast-iron radiators. It also claims to know when to start heating in order to hit your target temperature exactly at the time you scheduled it.  
+The goal of this project (in 2013) was to see how well the Nest algorithms work. In particuar, the Nest claims to minimize overshoot, which is a common problem with cast-iron radiators. It also claims to know when to start heating in order to hit your target temperature exactly at the time you scheduled it.  
 
-Unfortunately, you can't actually access historical temperature data on the Nest website or via the iOS app. It shows you when heating was turned on/off and what the temperature targets were at those times, but it doesn't give you any indication of how well or how poorly the thermostat performed. This could be by design, as it's a lot of information to store.  
-
-This project uses Google's official [Smart Device Management (SDM) API](https://developers.google.com/nest/device-access) to pull your temperature readings periodically and store them in a database so that you can inspect the data yourself in an easily consumable form.
+Unfortunately, you can't actually access historical temperature data on the Nest website or via the iOS app. It shows you when heating was turned on/off and what the temperature targets were at those times, but it doesn't give you any indication of how well or how poorly the thermostat performed. This could be by design, as it's a lot of information to store. In order to take a closer look, we pull temperature readings periodically and store them in a database so that the data can be inspected in an easily consumable form.
 
 I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Documents) library a little.
+
+## History
+
+Originally, this project used an unofficial [nest-api](https://github.com/gboudreau/nest-api) library by Guillaume Boudreau. However, starting in January 2020, the nest-api library became unable to authenticate directly to the Google Nest API due to impending plans to deprecate the Works With Nest program, which [officially ended](https://support.google.com/googlenest/answer/9293712?hl=en-419) in September 2023.
+
+Thanks to a couple hours of assistance from Claude Code, this project now uses Google's official [Smart Device Management (SDM) API](https://developers.google.com/nest/device-access).
 
 ## Features
 
