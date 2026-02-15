@@ -209,6 +209,7 @@ function drawCurrentSegments(container, dataPoints, heatingData, xScale, yScale,
 
 // --- Stored data (populated once by fetch, reused on resize) ---
 var storedData = null;
+var clearBrush = null;
 
 function drawChart() {
   // remove previous SVG if any
@@ -451,12 +452,19 @@ function drawChart() {
     });
 
   // draw the d3 pan/zoom "brush" object
-  lower.append("g")
+  var brushG = lower.append("g")
     .attr("class", "x brush")
-    .call(brush)
-    .selectAll("rect")
+    .call(brush);
+  brushG.selectAll("rect")
     .attr("y", -6)
     .attr("height", height2 + 7);
+
+  // expose a function to clear the brush selection (used by Esc key)
+  clearBrush = function() {
+    brush.clear();
+    brushG.call(brush);
+    brushUpdate();
+  };
 }
 
 // --- Fetch data once, then draw (and redraw on resize) ---
@@ -495,6 +503,11 @@ window.addEventListener("resize", function() {
   resizeTimer = setTimeout(function() {
     if (storedData) drawChart();
   }, 200);
+});
+
+// --- Esc key clears brush selection and resets zoom ---
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape" && clearBrush) clearBrush();
 });
 
 </script>
