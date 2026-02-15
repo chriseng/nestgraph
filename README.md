@@ -24,7 +24,7 @@ Thanks to a couple hours of assistance from Claude Code, this project now uses G
 * Lower mini-chart is interactive pan-and-zoom of the upper chart
 * Hover over the gray circles to get the exact timestamp and temperature
 
-![nestgraph screenshot](https://github.com/chriseng/nestgraph/raw/master/nestgraph-screenshot.png)
+![nestgraph screenshot](https://raw.githubusercontent.com/chriseng/nestgraph/refs/heads/master/nestgraph-screenshot.png)
 
 ## Compatible Thermostats
 
