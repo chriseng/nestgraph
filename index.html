@@ -389,9 +389,9 @@ function drawChart() {
 
   // --- Legend ---
   var legendData = [
-    { label: "Current", color: COLORS.current },
     { label: "Target", color: COLORS.target },
-    { label: "Heating", color: COLORS.heating }
+    { label: "Temp", color: COLORS.current },
+    { label: "Temp (Heating)", color: COLORS.heating }
   ];
   var legend = upper.append("g")
     .attr("class", "legend")
