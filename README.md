@@ -47,7 +47,7 @@ All Nest thermostats linked to a Google account are supported via the [SDM API](
 
 1. In [Google Cloud Console](https://console.cloud.google.com), create a project and enable the **Smart Device Management API**
 2. Create **OAuth 2.0 credentials** (Web application type) and add `http://localhost:8080` as an authorized redirect URI
-3. Configure the **OAuth consent screen** (External), add your Google account as a test user, and add the scope `https://www.googleapis.com/auth/sdm.service`
+3. Configure the **OAuth consent screen** (External), add your Google account as a test user, and add the scope `https://www.googleapis.com/auth/sdm.service`. Then **publish the app**: under *Publishing status*, click **Publish App**. Apps left in Testing status issue refresh tokens that expire after 7 days; publishing to Production makes them last indefinitely (Google only revokes inactive tokens after 6 months, which won't happen if the cron job runs continuously). You do not need Google to verify your app — publishing is sufficient for personal use.
 4. Register at [Google Device Access Console](https://console.nest.google.com/device-access) ($5 one-time fee) and create a project to get your **SDM Project ID**
 5. In the Device Access Console, link your OAuth client ID to your SDM project
 
@@ -130,6 +130,23 @@ Optionally, create a cron job to check if your thermostat has gone offline. Popu
 
 Point your web browser to the `nestgraph` directory on your webserver!
 
+
+## Troubleshooting
+
+### Refresh token expired or revoked (`invalid_grant`)
+
+If data collection stops with an `invalid_grant` error, the refresh token stored in `cli/config.json` is no longer valid. Common causes:
+
+- **OAuth app left in Testing mode** — Google limits refresh tokens to 7 days for apps in Testing status. Fix: go to Google Cloud Console → APIs & Services → OAuth consent screen → *Publishing status* → **Publish App**, then re-run `sdm_auth.py`.
+- **Token inactive for 6 months** — Google revokes tokens unused for 6 months. This won't happen if the cron job runs continuously.
+- **Google account password changed** — changing your password revokes all OAuth tokens.
+- **Access manually revoked** — if you removed the app at [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
+
+In all cases, re-authorize to get a new refresh token:
+
+```bash
+cli/venv/bin/python3 cli/sdm_auth.py
+```
 
 ## Known Issues
 
