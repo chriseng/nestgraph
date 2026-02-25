@@ -14,7 +14,7 @@ I also wanted an excuse to play with the [D3](http://d3js.org) (Data-Driven Docu
 
 Originally, this project used an unofficial [nest-api](https://github.com/gboudreau/nest-api) library by Guillaume Boudreau. However, starting in January 2020, the nest-api library became unable to authenticate directly to the Google Nest API due to impending plans to deprecate the Works With Nest program, which [officially ended](https://support.google.com/googlenest/answer/9293712?hl=en-419) in September 2023.
 
-Thanks to a couple hours of assistance from Claude Code, this project now uses Google's official [Smart Device Management (SDM) API](https://developers.google.com/nest/device-access).
+Thanks to a couple hours of assistance from Claude Code, we now use Google's official [Smart Device Management (SDM) API](https://developers.google.com/nest/device-access).
 
 ## Features
 
@@ -46,8 +46,8 @@ All Nest thermostats linked to a Google account are supported via the [SDM API](
 ### 1. Google API Setup
 
 1. In [Google Cloud Console](https://console.cloud.google.com), create a project and enable the **Smart Device Management API**
-2. Create **OAuth 2.0 credentials** (Web application type) and add `http://localhost:8080` as an authorized redirect URI
-3. Configure the **OAuth consent screen** (External), add your Google account as a test user, and add the scope `https://www.googleapis.com/auth/sdm.service`. Then **publish the app**: under *Publishing status*, click **Publish App**. Apps left in Testing status issue refresh tokens that expire after 7 days; publishing to Production makes them last indefinitely (Google only revokes inactive tokens after 6 months, which won't happen if the cron job runs continuously). You do not need Google to verify your app — publishing is sufficient for personal use.
+2. Create an **OAuth 2.0 client ID** (Web application type), add `http://localhost:8080` as an authorized redirect URI, and save the generated client ID and secret
+3. Configure the **OAuth consent screen** (External), add your Google account as a test user, and add the scope `https://www.googleapis.com/auth/sdm.service`. Then **publish the app**: in the *Audience tab*, under *Publishing status*, click **Publish App**. Apps left in Testing status issue refresh tokens that expire after 7 days; publishing to Production makes them last indefinitely (Google only revokes inactive tokens after 6 months, which won't happen if the cron job runs continuously). You do not need Google to verify your app — publishing is sufficient for personal use.
 4. Register at [Google Device Access Console](https://console.nest.google.com/device-access) ($5 one-time fee) and create a project to get your **SDM Project ID**
 5. In the Device Access Console, link your OAuth client ID to your SDM project
 
