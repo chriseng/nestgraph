@@ -60,6 +60,33 @@ h1 {
   z-index: 10;
 }
 
+#range-control {
+  position: fixed;
+  top: 46px;
+  right: 16px;
+  background: var(--legend-bg);
+  color: var(--text);
+  border: 1px solid var(--axis);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font: inherit;
+  z-index: 10;
+}
+
+#range-control label {
+  margin-right: 6px;
+  color: var(--axis);
+}
+
+#range-select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--axis);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font: inherit;
+}
+
 .axis path,
 .axis line {
   fill: none;
@@ -118,6 +145,14 @@ h1 {
 <body>
   <h1>nestgraph</h1>
   <button id="theme-toggle">Dark</button>
+  <div id="range-control">
+    <label for="range-select">Range</label>
+    <select id="range-select">
+      <option value="168" selected>7 days</option>
+      <option value="72">3 days</option>
+      <option value="24">1 day</option>
+    </select>
+  </div>
   <div id="tooltip"></div>
   <script src="https://d3js.org/d3.v3.min.js"></script>
   <script>
@@ -467,34 +502,42 @@ function drawChart() {
   };
 }
 
-// --- Fetch data once, then draw (and redraw on resize) ---
-d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
+function loadData() {
+  d3.tsv("fetch.py?hrs=" + hours, function(error, data) {
+    if (error) {
+      console.error("Error loading data:", error);
+      return;
+    }
 
-  data.forEach(function(d) {
-    d.date = parseDate(d.timestamp);
-  });
+    data.forEach(function(d) {
+      d.date = parseDate(d.timestamp);
+    });
 
-  var heatingRaw = data.map(function(d) { return d.heating; });
+    var heatingRaw = data.map(function(d) { return d.heating; });
 
-  var seriesNames = ["current", "target"];
-  var points = seriesNames.map(function(name) {
-    return {
-      name: name,
-      values: data.map(function(d) {
-        return { date: d.date, val: +d[name] };
-      })
+    var seriesNames = ["current", "target"];
+    var points = seriesNames.map(function(name) {
+      return {
+        name: name,
+        values: data.map(function(d) {
+          return { date: d.date, val: +d[name] };
+        })
+      };
+    });
+
+    storedData = {
+      heatingRaw: heatingRaw,
+      currentPoints: points[0],
+      targetPoints: points[1],
+      currentValues: points[0].values
     };
+
+    drawChart();
   });
+}
 
-  storedData = {
-    heatingRaw: heatingRaw,
-    currentPoints: points[0],
-    targetPoints: points[1],
-    currentValues: points[0].values
-  };
-
-  drawChart();
-});
+// --- Fetch data once, then draw (and redraw on resize) ---
+loadData();
 
 // --- Debounced resize handler ---
 var resizeTimer;
@@ -508,6 +551,15 @@ window.addEventListener("resize", function() {
 // --- Esc key clears brush selection and resets zoom ---
 document.addEventListener("keydown", function(e) {
   if (e.key === "Escape" && clearBrush) clearBrush();
+});
+
+// --- Range selector ---
+document.getElementById("range-select").addEventListener("change", function() {
+  var nextHours = parseInt(this.value, 10);
+  if (!isNaN(nextHours)) {
+    hours = nextHours;
+    loadData();
+  }
 });
 
 </script>
