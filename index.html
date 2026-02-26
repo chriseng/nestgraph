@@ -183,6 +183,10 @@ document.getElementById('theme-toggle').addEventListener('click', function() {
 // change this if you want to limit the amount of data pulled
 var hours = 24 * 7;
 
+// change this if you want more/less padding at the top of the graph to make room for the legend;
+// it sets the max range of the y-axis to be a percentage of the max-min range of the data values
+var upperPadding = 0.2;
+
 var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
 
 var COLORS = {
@@ -260,7 +264,7 @@ function computeYDomain(points) {
   return {
     min: yMin,
     max: yMax,
-    pad: 0.15 * (yMax - yMin)
+    pad: upperPadding * (yMax - yMin)
   };
 }
 
