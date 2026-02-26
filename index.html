@@ -182,7 +182,6 @@ document.getElementById('theme-toggle').addEventListener('click', function() {
 
 // change this if you want to limit the amount of data pulled
 var hours = 24 * 7;
-var yMaxPadding = 3.0;
 
 var parseDate = d3.time.format("%Y-%m-%d %H:%M:%S").parse;
 
@@ -371,9 +370,12 @@ function drawChart() {
   x2.domain(x.domain());
 
   // define the y-domains (min and max of the union of all trendlines, with padding)
+  var yMin = +d3.min(points, function(c) { return d3.min(c.values, function(v) { return v.val }); });
+  var yMax = +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); });
+  var yMaxPadding = 0.15 * (yMax - yMin);
   y.domain([
-      +d3.min(points, function(c) { return d3.min(c.values, function(v) { return v.val }); }) - 0.5,
-      +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); }) + yMaxPadding
+      yMin - 0.5,
+      yMax + yMaxPadding
   ]);
   y2.domain(y.domain());
 
