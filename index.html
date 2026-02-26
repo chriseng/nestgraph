@@ -254,6 +254,16 @@ function drawCurrentSegments(container, dataPoints, heatingData, xScale, yScale,
 var storedData = null;
 var clearBrush = null;
 
+function computeYDomain(points) {
+  var yMin = +d3.min(points, function(c) { return d3.min(c.values, function(v) { return v.val }); });
+  var yMax = +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); });
+  return {
+    min: yMin,
+    max: yMax,
+    pad: 0.15 * (yMax - yMin)
+  };
+}
+
 function drawChart() {
   // remove previous SVG if any
   d3.select("body").select("svg").remove();
@@ -370,12 +380,10 @@ function drawChart() {
   x2.domain(x.domain());
 
   // define the y-domains (min and max of the union of all trendlines, with padding)
-  var yMin = +d3.min(points, function(c) { return d3.min(c.values, function(v) { return v.val }); });
-  var yMax = +d3.max(points, function(c) { return d3.max(c.values, function(v) { return v.val }); });
-  var yMaxPadding = 0.15 * (yMax - yMin);
+  var yDomain = data.yDomain || computeYDomain(points);
   y.domain([
-      yMin - 0.5,
-      yMax + yMaxPadding
+      yDomain.min - 0.5,
+      yDomain.max + yDomain.pad
   ]);
   y2.domain(y.domain());
 
@@ -540,7 +548,8 @@ function loadData() {
       heatingRaw: heatingRaw,
       currentPoints: points[0],
       targetPoints: points[1],
-      currentValues: points[0].values
+      currentValues: points[0].values,
+      yDomain: computeYDomain(points)
     };
 
     drawChart();
