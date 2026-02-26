@@ -46,10 +46,17 @@ h1 {
   margin: 0 0 8px 0;
 }
 
-#theme-toggle {
+#controls {
   position: fixed;
   top: 12px;
   right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+#theme-toggle {
   background: var(--legend-bg);
   color: var(--text);
   border: 1px solid var(--axis);
@@ -57,20 +64,14 @@ h1 {
   padding: 4px 10px;
   font: inherit;
   cursor: pointer;
-  z-index: 10;
 }
 
 #range-control {
-  position: fixed;
-  top: 46px;
-  right: 16px;
-  background: var(--legend-bg);
+  background: transparent;
   color: var(--text);
-  border: 1px solid var(--axis);
-  border-radius: 4px;
-  padding: 4px 8px;
+  border: none;
+  padding: 0;
   font: inherit;
-  z-index: 10;
 }
 
 #range-control label {
@@ -144,14 +145,16 @@ h1 {
 </head>
 <body>
   <h1>nestgraph</h1>
-  <button id="theme-toggle">Dark</button>
-  <div id="range-control">
-    <label for="range-select">Range</label>
-    <select id="range-select">
-      <option value="168" selected>7 days</option>
-      <option value="72">3 days</option>
-      <option value="24">1 day</option>
-    </select>
+  <div id="controls">
+    <div id="range-control">
+      <label for="range-select">Range</label>
+      <select id="range-select">
+        <option value="168" selected>7 days</option>
+        <option value="72">3 days</option>
+        <option value="24">1 day</option>
+      </select>
+    </div>
+    <button id="theme-toggle">Dark</button>
   </div>
   <div id="tooltip"></div>
   <script src="https://d3js.org/d3.v3.min.js"></script>
