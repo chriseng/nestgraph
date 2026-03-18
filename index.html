@@ -174,6 +174,8 @@ h1 {
   }
 })();
 
+document.getElementById('range-select').value = String(hours);
+
 document.getElementById('theme-toggle').addEventListener('click', function() {
   var isDark = document.body.classList.toggle('dark');
   this.textContent = isDark ? 'Light' : 'Dark';
@@ -181,7 +183,8 @@ document.getElementById('theme-toggle').addEventListener('click', function() {
 });
 
 // change this if you want to limit the amount of data pulled
-var hours = 24 * 7;
+var savedRange = parseInt(localStorage.getItem('nestgraph-range'), 10);
+var hours = (!isNaN(savedRange) && [24, 72, 168].indexOf(savedRange) !== -1) ? savedRange : 168;
 
 // change this if you want more/less padding at the top of the graph to make room for the legend;
 // it sets the max range of the y-axis to be a percentage of the max-min range of the data values
@@ -582,6 +585,7 @@ document.getElementById("range-select").addEventListener("change", function() {
   var nextHours = parseInt(this.value, 10);
   if (!isNaN(nextHours)) {
     hours = nextHours;
+    localStorage.setItem('nestgraph-range', this.value);
     loadData();
   }
 });
